@@ -3,8 +3,9 @@
 # RPY 采用 ROS 固定轴顺序：Rz(yaw) * Ry(pitch) * Rx(roll)。
 schema_version: 1
 paths:
-  bag: ../../zhongchuanbag-20260930T031102Z-1-001/zhongchuanbag/bags/hunter_sensors_20260930_104649
-  map: ../../zhongchuanbag-20260930T031102Z-1-001/zhongchuanbag/GlobalMap_loc.pcd
+  bag: /home/user/bags/hunter_sensors_20260930_104649
+  # 室外 outdoor0920；室内改 GlobalMap_loc.pcd
+  map: /home/user/ws_nav_fastlio/src/octomap_convert/map_handle/outdoor0920/outdoor0920_reloc_level.pcd
   map_metadata: null
   output_root: ../artifacts/fusion
 runtime:
@@ -12,7 +13,8 @@ runtime:
   mode: live
   use_sim_time: false
 live:
-  domain_id: 0
+  # 与本机 Hunter 导航栈一致
+  domain_id: 42
   localhost_only: false
   # topic：等待 /initialpose 中地图坐标系下的后轮中心初值；不自动采用旧 bag 初值。
   # config：明确选择 initial_pose 中保存的地图→雷达初值。

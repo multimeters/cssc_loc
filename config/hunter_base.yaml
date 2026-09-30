@@ -1,0 +1,10 @@
+/**:
+  ros__parameters:
+    port_name: can0
+    odom_frame: hunter_odom
+    base_frame: hunter_base_link
+    odom_topic_name: hunter_odom
+    robot_model: hunter_se
+    control_rate: 50
+    simulated_robot: false
+    use_sim_time: false
