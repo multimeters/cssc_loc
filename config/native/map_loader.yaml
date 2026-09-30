@@ -1,0 +1,10 @@
+/**:
+  ros__parameters:
+    use_sim_time: ${runtime.use_sim_time}
+    enable_whole_load: false
+    enable_downsampled_whole_load: false
+    enable_partial_load: false
+    enable_selected_load: false
+    leaf_size: 1.0
+    pcd_paths_or_directory: ["${paths.map}"]
+    pcd_metadata_path: ${paths.map_metadata}

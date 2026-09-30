@@ -1,0 +1,5 @@
+/**:
+  ros__parameters:
+    use_sim_time: true
+    output_frame: base_link
+    message_timeout_sec: 0.2

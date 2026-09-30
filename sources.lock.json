@@ -1,0 +1,667 @@
+{
+  "upstream": {
+    "url": "https://github.com/libpet-co/autoware.APS.git",
+    "branch": "hmi_container_dev",
+    "commit": "1b29946659d716b06c1712fb39f269566297332e"
+  },
+  "profiles": {
+    "dead_reckoning": [
+      "autoware_cmake",
+      "autoware_common_msgs",
+      "autoware_ekf_localizer",
+      "autoware_gyro_odometer",
+      "autoware_internal_debug_msgs",
+      "autoware_internal_planning_msgs",
+      "autoware_kalman_filter",
+      "autoware_localization_util",
+      "autoware_perception_msgs",
+      "autoware_planning_msgs",
+      "autoware_signal_processing",
+      "autoware_stop_filter",
+      "autoware_twist2accel",
+      "autoware_utils_diagnostics",
+      "autoware_utils_geometry",
+      "autoware_utils_logging",
+      "autoware_utils_math",
+      "autoware_utils_system",
+      "autoware_utils_tf"
+    ],
+    "ndt": [
+      "autoware_cmake",
+      "autoware_common_msgs",
+      "autoware_component_interface_specs",
+      "autoware_control_msgs",
+      "autoware_geography_utils",
+      "autoware_internal_debug_msgs",
+      "autoware_internal_localization_msgs",
+      "autoware_internal_planning_msgs",
+      "autoware_lanelet2_extension",
+      "autoware_localization_msgs",
+      "autoware_localization_util",
+      "autoware_map_loader",
+      "autoware_map_msgs",
+      "autoware_ndt_scan_matcher",
+      "autoware_perception_msgs",
+      "autoware_planning_msgs",
+      "autoware_utils_diagnostics",
+      "autoware_utils_geometry",
+      "autoware_utils_logging",
+      "autoware_utils_math",
+      "autoware_utils_pcl",
+      "autoware_utils_tf",
+      "autoware_utils_visualization",
+      "autoware_vehicle_msgs"
+    ]
+  },
+  "external_dependencies": {
+    "dead_reckoning": [
+      "ament_cmake_auto",
+      "ament_lint_auto",
+      "builtin_interfaces",
+      "diagnostic_msgs",
+      "eigen",
+      "eigen3_cmake_module",
+      "fmt",
+      "geometry_msgs",
+      "libboost-dev",
+      "libboost-system-dev",
+      "logging_demo",
+      "nav_msgs",
+      "rclcpp",
+      "rclcpp_components",
+      "ros_environment",
+      "rosidl_default_generators",
+      "rosidl_default_runtime",
+      "sensor_msgs",
+      "std_msgs",
+      "std_srvs",
+      "tf2",
+      "tf2_eigen",
+      "tf2_geometry_msgs",
+      "tf2_ros",
+      "unique_identifier_msgs",
+      "visualization_msgs"
+    ],
+    "ndt": [
+      "ament_cmake_auto",
+      "ament_lint_auto",
+      "builtin_interfaces",
+      "diagnostic_msgs",
+      "fmt",
+      "geographic_msgs",
+      "geographiclib",
+      "geometry_msgs",
+      "lanelet2_core",
+      "lanelet2_io",
+      "lanelet2_maps",
+      "lanelet2_projection",
+      "lanelet2_routing",
+      "lanelet2_traffic_rules",
+      "lanelet2_validation",
+      "libboost-system-dev",
+      "libpcl-all-dev",
+      "logging_demo",
+      "nav_msgs",
+      "pcl_conversions",
+      "pcl_ros",
+      "pugixml-dev",
+      "range-v3",
+      "rcl",
+      "rclcpp",
+      "rclcpp_components",
+      "ros_environment",
+      "rosidl_default_generators",
+      "rosidl_default_runtime",
+      "rosidl_runtime_cpp",
+      "sensor_msgs",
+      "std_msgs",
+      "std_srvs",
+      "tf2",
+      "tf2_eigen",
+      "tf2_geometry_msgs",
+      "tf2_ros",
+      "tf2_sensor_msgs",
+      "unique_identifier_msgs",
+      "visualization_msgs",
+      "yaml-cpp"
+    ]
+  },
+  "packages": {
+    "autoware_cmake": {
+      "repository": "core/autoware_cmake",
+      "path": "autoware_cmake",
+      "commit": "fa3dc172fb6f24ec6103b00c41320d722a994136",
+      "dependencies": [
+        "ament_cmake_auto",
+        "ament_lint_auto",
+        "ros_environment"
+      ],
+      "content_sha256": "c05d560938fa4ab38394899e713511fab755af038f623f6aa3fc72bc65fcc2a9"
+    },
+    "autoware_common_msgs": {
+      "repository": "core/autoware_msgs",
+      "path": "autoware_common_msgs",
+      "commit": "3fad6405f5eb3e5fa18cfff3565c7b2c02291a85",
+      "dependencies": [
+        "ament_cmake_auto",
+        "rosidl_default_generators",
+        "rosidl_default_runtime"
+      ],
+      "content_sha256": "90bf910076139b0bca2d20fe77d5743fe82131d5ca1f63f28b9e5b771280798f"
+    },
+    "autoware_component_interface_specs": {
+      "repository": "core/autoware_core",
+      "path": "common/autoware_component_interface_specs",
+      "commit": "d54caaf87d94dd2f584677e871031f5050c1d9d8",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_cmake",
+        "autoware_control_msgs",
+        "autoware_localization_msgs",
+        "autoware_map_msgs",
+        "autoware_perception_msgs",
+        "autoware_planning_msgs",
+        "autoware_vehicle_msgs",
+        "nav_msgs",
+        "rcl",
+        "rclcpp",
+        "rosidl_runtime_cpp",
+        "sensor_msgs"
+      ],
+      "content_sha256": "a24cb800e3380a446571990368bfb7c1ac9006ba5b0119aa4b44b042dcacc5dc"
+    },
+    "autoware_control_msgs": {
+      "repository": "core/autoware_msgs",
+      "path": "autoware_control_msgs",
+      "commit": "3fad6405f5eb3e5fa18cfff3565c7b2c02291a85",
+      "dependencies": [
+        "ament_cmake_auto",
+        "builtin_interfaces",
+        "rosidl_default_generators",
+        "rosidl_default_runtime"
+      ],
+      "content_sha256": "fe87aff71407720cda112771152b9757bdfea8fe901fa097446023a17fdec030"
+    },
+    "autoware_ekf_localizer": {
+      "repository": "core/autoware_core",
+      "path": "localization/autoware_ekf_localizer",
+      "commit": "d54caaf87d94dd2f584677e871031f5050c1d9d8",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_cmake",
+        "autoware_internal_debug_msgs",
+        "autoware_kalman_filter",
+        "autoware_localization_util",
+        "autoware_utils_geometry",
+        "autoware_utils_logging",
+        "autoware_utils_system",
+        "diagnostic_msgs",
+        "eigen",
+        "eigen3_cmake_module",
+        "fmt",
+        "geometry_msgs",
+        "nav_msgs",
+        "rclcpp",
+        "rclcpp_components",
+        "std_srvs",
+        "tf2",
+        "tf2_ros"
+      ],
+      "content_sha256": "4de3a0b84aec2bb37758538cf2c8f96390c439955aa2317af175f0dd8064b4c4"
+    },
+    "autoware_geography_utils": {
+      "repository": "core/autoware_core",
+      "path": "common/autoware_geography_utils",
+      "commit": "d54caaf87d94dd2f584677e871031f5050c1d9d8",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_cmake",
+        "autoware_lanelet2_extension",
+        "autoware_map_msgs",
+        "geographic_msgs",
+        "geographiclib",
+        "geometry_msgs",
+        "lanelet2_io"
+      ],
+      "content_sha256": "d9a7e692ab97753a631b15ad7e2ba58ebba17d96cdbf9d76f406e14194ab6403"
+    },
+    "autoware_gyro_odometer": {
+      "repository": "core/autoware_core",
+      "path": "localization/autoware_gyro_odometer",
+      "commit": "d54caaf87d94dd2f584677e871031f5050c1d9d8",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_cmake",
+        "autoware_localization_util",
+        "autoware_utils_diagnostics",
+        "autoware_utils_geometry",
+        "autoware_utils_logging",
+        "autoware_utils_tf",
+        "diagnostic_msgs",
+        "fmt",
+        "geometry_msgs",
+        "rclcpp",
+        "rclcpp_components",
+        "sensor_msgs",
+        "tf2",
+        "tf2_geometry_msgs"
+      ],
+      "content_sha256": "dcc5fe064f5747546619276f964dd16dc5bc0f99d796f1a6793f564b7c8fd9c6"
+    },
+    "autoware_internal_debug_msgs": {
+      "repository": "core/autoware_internal_msgs",
+      "path": "autoware_internal_debug_msgs",
+      "commit": "f5524e501775463f508cdb93fe6aec45e1fb4836",
+      "dependencies": [
+        "ament_cmake_auto",
+        "builtin_interfaces",
+        "rosidl_default_generators",
+        "rosidl_default_runtime",
+        "std_msgs"
+      ],
+      "content_sha256": "7e7951ab8c84ab10e78c1d99faecd7cb253508a9a4c34768b73ff122dff5b394"
+    },
+    "autoware_internal_localization_msgs": {
+      "repository": "core/autoware_internal_msgs",
+      "path": "autoware_internal_localization_msgs",
+      "commit": "f5524e501775463f508cdb93fe6aec45e1fb4836",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_common_msgs",
+        "geometry_msgs",
+        "rosidl_default_generators",
+        "rosidl_default_runtime",
+        "std_msgs"
+      ],
+      "content_sha256": "2d5ed80ff8dd46b5b4beae6efa3c9ae853f954c6659628476977f18b7b7ab6a8"
+    },
+    "autoware_internal_planning_msgs": {
+      "repository": "core/autoware_internal_msgs",
+      "path": "autoware_internal_planning_msgs",
+      "commit": "f5524e501775463f508cdb93fe6aec45e1fb4836",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_common_msgs",
+        "autoware_perception_msgs",
+        "autoware_planning_msgs",
+        "builtin_interfaces",
+        "geometry_msgs",
+        "rosidl_default_generators",
+        "rosidl_default_runtime",
+        "std_msgs",
+        "unique_identifier_msgs"
+      ],
+      "content_sha256": "266fbe232146e4a8ad467840e4104c92a2d9f3eed46c11d8a906be2454035c50"
+    },
+    "autoware_kalman_filter": {
+      "repository": "core/autoware_core",
+      "path": "common/autoware_kalman_filter",
+      "commit": "d54caaf87d94dd2f584677e871031f5050c1d9d8",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_cmake",
+        "eigen",
+        "eigen3_cmake_module"
+      ],
+      "content_sha256": "0919837e1112dd1e03e569da4133b68cf4ba4649bdfa7461f544000b6de19b0a"
+    },
+    "autoware_lanelet2_extension": {
+      "repository": "core/autoware_lanelet2_extension.APS",
+      "path": "autoware_lanelet2_extension",
+      "commit": "13f1275e257b59e9d2192c964e158f4b5beed62e",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_cmake",
+        "autoware_map_msgs",
+        "autoware_planning_msgs",
+        "geographiclib",
+        "geometry_msgs",
+        "lanelet2_core",
+        "lanelet2_io",
+        "lanelet2_maps",
+        "lanelet2_projection",
+        "lanelet2_routing",
+        "lanelet2_traffic_rules",
+        "lanelet2_validation",
+        "pugixml-dev",
+        "range-v3",
+        "rclcpp",
+        "tf2",
+        "tf2_geometry_msgs",
+        "visualization_msgs"
+      ],
+      "content_sha256": "7ce1ac1bebe9e7386a6f6d7eb611e35628c36c8774a8dea16380e05c78ce3d02"
+    },
+    "autoware_localization_msgs": {
+      "repository": "core/autoware_msgs",
+      "path": "autoware_localization_msgs",
+      "commit": "3fad6405f5eb3e5fa18cfff3565c7b2c02291a85",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_common_msgs",
+        "geometry_msgs",
+        "rosidl_default_generators",
+        "rosidl_default_runtime",
+        "std_msgs"
+      ],
+      "content_sha256": "7fe7c31366abdd1068f823c77a5c5220209c68b4a7f566fcc06e2828b64c9309"
+    },
+    "autoware_localization_util": {
+      "repository": "core/autoware_core",
+      "path": "localization/autoware_localization_util",
+      "commit": "d54caaf87d94dd2f584677e871031f5050c1d9d8",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_cmake",
+        "diagnostic_msgs",
+        "geometry_msgs",
+        "rclcpp",
+        "std_msgs",
+        "tf2",
+        "tf2_eigen",
+        "tf2_geometry_msgs",
+        "visualization_msgs"
+      ],
+      "content_sha256": "3fb92ff4d6fcdca01f86d988d37bedfaff971ef5415d6399db48217a2d46ab04"
+    },
+    "autoware_map_loader": {
+      "repository": "core/autoware_core",
+      "path": "map/autoware_map_loader",
+      "commit": "d54caaf87d94dd2f584677e871031f5050c1d9d8",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_cmake",
+        "autoware_component_interface_specs",
+        "autoware_geography_utils",
+        "autoware_lanelet2_extension",
+        "autoware_map_msgs",
+        "fmt",
+        "geometry_msgs",
+        "libpcl-all-dev",
+        "pcl_conversions",
+        "rclcpp",
+        "rclcpp_components",
+        "visualization_msgs",
+        "yaml-cpp"
+      ],
+      "content_sha256": "74dde5087e5daea6e8bbe6e39509809ffe0c5413f7e465bacc82b550e6bff025"
+    },
+    "autoware_map_msgs": {
+      "repository": "core/autoware_msgs",
+      "path": "autoware_map_msgs",
+      "commit": "3fad6405f5eb3e5fa18cfff3565c7b2c02291a85",
+      "dependencies": [
+        "ament_cmake_auto",
+        "geographic_msgs",
+        "geometry_msgs",
+        "rosidl_default_generators",
+        "rosidl_default_runtime",
+        "sensor_msgs",
+        "std_msgs"
+      ],
+      "content_sha256": "4fb5969f2cb90862b4bd92cef3fdb76722126684bab97d2fdc66342671b798a2"
+    },
+    "autoware_ndt_scan_matcher": {
+      "repository": "universe/autoware_universe.APS",
+      "path": "localization/autoware_ndt_scan_matcher",
+      "commit": "1363f65bbad4089ceec40357ff571b81c006e6ce",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_cmake",
+        "autoware_internal_debug_msgs",
+        "autoware_internal_localization_msgs",
+        "autoware_localization_util",
+        "autoware_map_msgs",
+        "autoware_utils_diagnostics",
+        "autoware_utils_logging",
+        "autoware_utils_pcl",
+        "autoware_utils_visualization",
+        "diagnostic_msgs",
+        "fmt",
+        "geometry_msgs",
+        "libpcl-all-dev",
+        "nav_msgs",
+        "pcl_conversions",
+        "rclcpp",
+        "rclcpp_components",
+        "sensor_msgs",
+        "std_srvs",
+        "tf2",
+        "tf2_eigen",
+        "tf2_geometry_msgs",
+        "tf2_ros",
+        "tf2_sensor_msgs",
+        "visualization_msgs"
+      ],
+      "content_sha256": "a28a96ce2075255f574bdbb818c3887093d6564792bac3e7891344b475a51a22"
+    },
+    "autoware_perception_msgs": {
+      "repository": "core/autoware_msgs",
+      "path": "autoware_perception_msgs",
+      "commit": "3fad6405f5eb3e5fa18cfff3565c7b2c02291a85",
+      "dependencies": [
+        "ament_cmake_auto",
+        "builtin_interfaces",
+        "geometry_msgs",
+        "rosidl_default_generators",
+        "rosidl_default_runtime",
+        "std_msgs",
+        "unique_identifier_msgs"
+      ],
+      "content_sha256": "ba8a4a0bb29ed1d3e8596358c6bfdd3b5c228de743190b2f9a7cea3e2dacfe77"
+    },
+    "autoware_planning_msgs": {
+      "repository": "core/autoware_msgs",
+      "path": "autoware_planning_msgs",
+      "commit": "3fad6405f5eb3e5fa18cfff3565c7b2c02291a85",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_common_msgs",
+        "builtin_interfaces",
+        "geometry_msgs",
+        "nav_msgs",
+        "rosidl_default_generators",
+        "rosidl_default_runtime",
+        "std_msgs",
+        "unique_identifier_msgs"
+      ],
+      "content_sha256": "aa976b047068e13eab7e0a7a847a9db16df6b8a6a2bd49f2e4d2b82699d49fc4"
+    },
+    "autoware_signal_processing": {
+      "repository": "core/autoware_core",
+      "path": "common/autoware_signal_processing",
+      "commit": "d54caaf87d94dd2f584677e871031f5050c1d9d8",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_cmake",
+        "geometry_msgs",
+        "libboost-dev",
+        "rclcpp"
+      ],
+      "content_sha256": "3c46e0e2281e38eb76c3085be7817e880d177ea8c77f18c358b339ca5d7dcbe7"
+    },
+    "autoware_stop_filter": {
+      "repository": "core/autoware_core",
+      "path": "localization/autoware_stop_filter",
+      "commit": "d54caaf87d94dd2f584677e871031f5050c1d9d8",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_cmake",
+        "autoware_internal_debug_msgs",
+        "geometry_msgs",
+        "nav_msgs",
+        "rclcpp",
+        "rclcpp_components",
+        "tf2"
+      ],
+      "content_sha256": "d80ce7596f836160f19a9a4b20c867686c42abf484aded2c1a3ccb8e16d9391e"
+    },
+    "autoware_twist2accel": {
+      "repository": "core/autoware_core",
+      "path": "localization/autoware_twist2accel",
+      "commit": "d54caaf87d94dd2f584677e871031f5050c1d9d8",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_cmake",
+        "autoware_signal_processing",
+        "geometry_msgs",
+        "nav_msgs",
+        "rclcpp",
+        "rclcpp_components",
+        "tf2"
+      ],
+      "content_sha256": "76b1a09a774ddcab29d2c4a0191714f29ce0d769f06549903eeccfaa02c52440"
+    },
+    "autoware_utils_diagnostics": {
+      "repository": "core/autoware_utils",
+      "path": "autoware_utils_diagnostics",
+      "commit": "10d45b89b9902382c56306cf2677b7db9c0846aa",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_cmake",
+        "diagnostic_msgs",
+        "rclcpp"
+      ],
+      "content_sha256": "d2bc40cf03980266505575c8712eb724c5b04c83ecc683b3ef97a6c69b91a0be"
+    },
+    "autoware_utils_geometry": {
+      "repository": "core/autoware_utils",
+      "path": "autoware_utils_geometry",
+      "commit": "10d45b89b9902382c56306cf2677b7db9c0846aa",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_cmake",
+        "autoware_internal_planning_msgs",
+        "autoware_utils_math",
+        "libboost-system-dev",
+        "tf2",
+        "tf2_eigen",
+        "tf2_geometry_msgs"
+      ],
+      "content_sha256": "c64dc328efbe64ad5827bc41e03630add4c1181b1c2430a54964989d140ee984"
+    },
+    "autoware_utils_logging": {
+      "repository": "core/autoware_utils",
+      "path": "autoware_utils_logging",
+      "commit": "10d45b89b9902382c56306cf2677b7db9c0846aa",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_cmake",
+        "logging_demo",
+        "rclcpp"
+      ],
+      "content_sha256": "8e496c097a028ee845b369a359734da15307bb51ba95f6186ee5760fd15fd4ed"
+    },
+    "autoware_utils_math": {
+      "repository": "core/autoware_utils",
+      "path": "autoware_utils_math",
+      "commit": "10d45b89b9902382c56306cf2677b7db9c0846aa",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_cmake"
+      ],
+      "content_sha256": "180a89cea4281020fe823f74eb6fcbe7d4445a54a465dae917c8fc8852457cbc"
+    },
+    "autoware_utils_pcl": {
+      "repository": "core/autoware_utils",
+      "path": "autoware_utils_pcl",
+      "commit": "10d45b89b9902382c56306cf2677b7db9c0846aa",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_cmake",
+        "autoware_utils_tf",
+        "pcl_conversions",
+        "pcl_ros"
+      ],
+      "content_sha256": "0f41bdf353ca0785813f4227ab768378f9f19ac75fb0438db26dc60a7d904ee6"
+    },
+    "autoware_utils_system": {
+      "repository": "core/autoware_utils",
+      "path": "autoware_utils_system",
+      "commit": "10d45b89b9902382c56306cf2677b7db9c0846aa",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_cmake",
+        "rclcpp"
+      ],
+      "content_sha256": "3363afedd9f6f8cdb22b677f978107ee6bea81cec6cacb2ce9f2423935279280"
+    },
+    "autoware_utils_tf": {
+      "repository": "core/autoware_utils",
+      "path": "autoware_utils_tf",
+      "commit": "10d45b89b9902382c56306cf2677b7db9c0846aa",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_cmake",
+        "autoware_utils_geometry",
+        "geometry_msgs",
+        "rclcpp",
+        "tf2_ros"
+      ],
+      "content_sha256": "fd1de1dc9b600b85f3ba3993e7a79d8ffd0ee3a5ed7e05bcac80329ef3912326"
+    },
+    "autoware_utils_visualization": {
+      "repository": "core/autoware_utils",
+      "path": "autoware_utils_visualization",
+      "commit": "10d45b89b9902382c56306cf2677b7db9c0846aa",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_cmake",
+        "rclcpp",
+        "visualization_msgs"
+      ],
+      "content_sha256": "b07fbbbf7da5dc7a728594c9ac467c570803291736d3027bbb80d3d3731b1d11"
+    },
+    "autoware_vehicle_msgs": {
+      "repository": "core/autoware_msgs",
+      "path": "autoware_vehicle_msgs",
+      "commit": "3fad6405f5eb3e5fa18cfff3565c7b2c02291a85",
+      "dependencies": [
+        "ament_cmake_auto",
+        "autoware_planning_msgs",
+        "builtin_interfaces",
+        "rosidl_default_generators",
+        "rosidl_default_runtime",
+        "std_msgs"
+      ],
+      "content_sha256": "1d78a8cb5ad4fef58907cf94b5c65c3e8d3600095054db1e5ae6ed0df151e780"
+    }
+  },
+  "repositories": {
+    "core/autoware_cmake": {
+      "url": "https://github.com/autowarefoundation/autoware_cmake.git",
+      "requested_version": "1.0.2",
+      "commit": "fa3dc172fb6f24ec6103b00c41320d722a994136"
+    },
+    "core/autoware_core": {
+      "url": "https://github.com/libpet-co/autoware_core.APS.git",
+      "requested_version": "airy_test",
+      "commit": "d54caaf87d94dd2f584677e871031f5050c1d9d8"
+    },
+    "core/autoware_internal_msgs": {
+      "url": "https://github.com/autowarefoundation/autoware_internal_msgs.git",
+      "requested_version": "1.12.0",
+      "commit": "f5524e501775463f508cdb93fe6aec45e1fb4836"
+    },
+    "core/autoware_lanelet2_extension.APS": {
+      "url": "git@github.com:libpet-co/autoware_lanelet2_extension.APS.git",
+      "requested_version": "aps_dev",
+      "commit": "13f1275e257b59e9d2192c964e158f4b5beed62e"
+    },
+    "core/autoware_msgs": {
+      "url": "https://github.com/autowarefoundation/autoware_msgs.git",
+      "requested_version": "1.9.0",
+      "commit": "3fad6405f5eb3e5fa18cfff3565c7b2c02291a85"
+    },
+    "core/autoware_utils": {
+      "url": "https://github.com/autowarefoundation/autoware_utils.git",
+      "requested_version": "1.4.2",
+      "commit": "10d45b89b9902382c56306cf2677b7db9c0846aa"
+    },
+    "universe/autoware_universe.APS": {
+      "url": "git@github.com:libpet-co/autoware_universe.APS.git",
+      "requested_version": "fleet-target",
+      "commit": "1363f65bbad4089ceec40357ff571b81c006e6ce"
+    }
+  }
+}

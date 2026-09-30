@@ -1,0 +1,5 @@
+/**:
+  ros__parameters:
+    use_sim_time: ${runtime.use_sim_time}
+    output_frame: ${frames.base}
+    message_timeout_sec: ${adapter.sensor_timeout}

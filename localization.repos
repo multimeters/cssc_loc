@@ -1,0 +1,29 @@
+repositories:
+  core/autoware_cmake:
+    type: git
+    url: https://github.com/autowarefoundation/autoware_cmake.git
+    version: fa3dc172fb6f24ec6103b00c41320d722a994136
+  core/autoware_core:
+    type: git
+    url: https://github.com/libpet-co/autoware_core.APS.git
+    version: d54caaf87d94dd2f584677e871031f5050c1d9d8
+  core/autoware_internal_msgs:
+    type: git
+    url: https://github.com/autowarefoundation/autoware_internal_msgs.git
+    version: f5524e501775463f508cdb93fe6aec45e1fb4836
+  core/autoware_lanelet2_extension.APS:
+    type: git
+    url: https://github.com/libpet-co/autoware_lanelet2_extension.APS.git
+    version: 13f1275e257b59e9d2192c964e158f4b5beed62e
+  core/autoware_msgs:
+    type: git
+    url: https://github.com/autowarefoundation/autoware_msgs.git
+    version: 3fad6405f5eb3e5fa18cfff3565c7b2c02291a85
+  core/autoware_utils:
+    type: git
+    url: https://github.com/autowarefoundation/autoware_utils.git
+    version: 10d45b89b9902382c56306cf2677b7db9c0846aa
+  universe/autoware_universe.APS:
+    type: git
+    url: https://github.com/libpet-co/autoware_universe.APS.git
+    version: 1363f65bbad4089ceec40357ff571b81c006e6ce

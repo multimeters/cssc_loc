@@ -1,0 +1,722 @@
+{
+  "source_database": "/mnt/e/zhongchuandingwei/zhongchuanbag-20260930T031102Z-1-001/zhongchuanbag/bags/hunter_sensors_20260930_104649/hunter_sensors_20260930_104649_0.db3",
+  "mutation_performed": false,
+  "user_confirmed": {
+    "base_footprint_origin": "rear axle center",
+    "body_equals_mid360_link": true,
+    "wheel_measurement": "hunter_odom.twist.twist.linear.x only"
+  },
+  "unconfirmed": {
+    "livox_frame_to_body_rotation": "No recorded TF establishes this relationship; gravity comparisons below state the identity assumption explicitly."
+  },
+  "recorded_base_footprint_T_mid360_link": {
+    "stamp_ns": 1790735543826042958,
+    "frame_id": "base_footprint",
+    "child_frame_id": "mid360_link",
+    "translation": [
+      0.432445,
+      0.0,
+      0.368458
+    ],
+    "rotation": [
+      0.0,
+      -0.25881904510252074,
+      0.0,
+      0.9659258262890683
+    ]
+  },
+  "recorded_extrinsic_rpy_deg": [
+    0.0,
+    -29.999999999999993,
+    0.0
+  ],
+  "expected_sensor_specific_force_direction_if_base_level_and_livox_equals_body": [
+    0.49999999999999994,
+    0.0,
+    0.8660254037844387
+  ],
+  "stationary_selection": {
+    "wheel_speed_abs_below_mps": 0.01,
+    "imu_angular_norm_below_radps": 0.03,
+    "wheel_imu_header_nearest_within_s": 0.05
+  },
+  "stationary_subsets": {
+    "all_wheel_and_gyro_stationary_candidates": {
+      "count": 728,
+      "first_stamp_ns": 1790736410957206916,
+      "last_stamp_ns": 1790736506317695732,
+      "acceleration_mean_as_recorded": [
+        -0.4215321527732598,
+        0.0017897392121645121,
+        0.8998960119027358
+      ],
+      "acceleration_stddev_as_recorded": [
+        0.004205498394019308,
+        0.0032088653036412497,
+        0.003634087589621352
+      ],
+      "acceleration_norm_as_recorded": {
+        "count": 728,
+        "min": 0.9781787798244954,
+        "max": 1.0116906953408424,
+        "mean": 0.9937475898087806,
+        "stddev": 0.003508361680683873,
+        "p50": 0.9940244556532609,
+        "p90": 0.9981815960761434,
+        "p95": 0.9990242714894674,
+        "p99": 1.000470669171521
+      },
+      "angular_velocity_mean_radps": [
+        -0.011178264536403611,
+        -0.00129882819377459,
+        -0.0008782169955608609
+      ],
+      "angular_velocity_stddev_radps": [
+        0.0033594939267445442,
+        0.001370993896418538,
+        0.0029559016063589005
+      ],
+      "normalized_acceleration_direction_in_livox_frame": [
+        -0.42419053008039165,
+        0.0018010261379090861,
+        0.905571173621912
+      ],
+      "assuming_livox_frame_equals_body_acceleration_in_base_footprint": [
+        -0.8150055587649538,
+        0.0017897392121645121,
+        0.568566730685443
+      ],
+      "assuming_livox_frame_equals_body_base_vertical_error_deg": 55.099545712975875,
+      "assuming_livox_frame_equals_body_acceleration_in_initial_ndt_map": [
+        -0.08125356049423167,
+        0.008457853240991868,
+        0.9903694840069123
+      ],
+      "assuming_livox_frame_equals_body_ndt_map_vertical_error_deg": 4.715479395687628,
+      "pitch_that_levels_acceleration_if_no_roll_deg": 25.099480886304647
+    },
+    "first_3s_stationary_candidates": {
+      "count": 147,
+      "first_stamp_ns": 1790736410957206916,
+      "last_stamp_ns": 1790736413947241527,
+      "acceleration_mean_as_recorded": [
+        -0.4211708923586372,
+        0.0022435744045948497,
+        0.9001555949652276
+      ],
+      "acceleration_stddev_as_recorded": [
+        0.0025775892569460035,
+        0.002862689132805087,
+        0.0029403542006022102
+      ],
+      "acceleration_norm_as_recorded": {
+        "count": 147,
+        "min": 0.9861569018018376,
+        "max": 1.0001653181773906,
+        "mean": 0.9938225543528176,
+        "stddev": 0.003203816692163147,
+        "p50": 0.9942536461274513,
+        "p90": 0.9975917215303722,
+        "p95": 0.9989134265616693,
+        "p99": 0.9998269890217352
+      },
+      "angular_velocity_mean_radps": [
+        -0.011140567795405176,
+        -0.0013638394219534738,
+        -0.0007016482908709519
+      ],
+      "angular_velocity_stddev_radps": [
+        0.0030778080083710855,
+        0.001296895752630348,
+        0.002651419786514854
+      ],
+      "normalized_acceleration_direction_in_livox_frame": [
+        -0.42379166103692245,
+        0.002257535221055921,
+        0.9057568832585773
+      ],
+      "assuming_livox_frame_equals_body_acceleration_in_base_footprint": [
+        -0.8148224895997549,
+        0.0022435744045948497,
+        0.5689721664192644
+      ],
+      "assuming_livox_frame_equals_body_base_vertical_error_deg": 55.07437370088657,
+      "assuming_livox_frame_equals_body_acceleration_in_initial_ndt_map": [
+        -0.08088070405298867,
+        0.008960752419368473,
+        0.9904787054608758
+      ],
+      "assuming_livox_frame_equals_body_ndt_map_vertical_error_deg": 4.6967476807567206,
+      "pitch_that_levels_acceleration_if_no_roll_deg": 25.074271750235397
+    },
+    "last_5s_stationary_candidates": {
+      "count": 118,
+      "first_stamp_ns": 1790736501503070137,
+      "last_stamp_ns": 1790736506317695732,
+      "acceleration_mean_as_recorded": [
+        -0.42199786840859105,
+        0.0010916545860848185,
+        0.8994532086081424
+      ],
+      "acceleration_stddev_as_recorded": [
+        0.0025891932238925348,
+        0.002815935706088862,
+        0.003008004527686299
+      ],
+      "acceleration_norm_as_recorded": {
+        "count": 118,
+        "min": 0.9864357933744828,
+        "max": 0.9997129408854674,
+        "mean": 0.9935350404911412,
+        "stddev": 0.0033573724203675485,
+        "p50": 0.9940165507485952,
+        "p90": 0.9981220105437891,
+        "p95": 0.999014280693666,
+        "p99": 0.9995686605235073
+      },
+      "angular_velocity_mean_radps": [
+        -0.010855674309561313,
+        -0.0015180466886041528,
+        -0.0012334208240953543
+      ],
+      "angular_velocity_stddev_radps": [
+        0.00335305770395938,
+        0.0013178227992108609,
+        0.002690743797629419
+      ],
+      "normalized_acceleration_direction_in_livox_frame": [
+        -0.4247464898824584,
+        0.0010987649187712701,
+        0.9053116656976116
+      ],
+      "assuming_livox_frame_equals_body_acceleration_in_base_footprint": [
+        -0.8151874786887936,
+        0.0010916545860848185,
+        0.56795039396578
+      ],
+      "assuming_livox_frame_equals_body_base_vertical_error_deg": 55.134658428999074,
+      "assuming_livox_frame_equals_body_acceleration_in_initial_ndt_map": [
+        -0.08175838784097945,
+        0.007691229520574032,
+        0.9901292229465386
+      ],
+      "assuming_livox_frame_equals_body_ndt_map_vertical_error_deg": 4.741147428742729,
+      "pitch_that_levels_acceleration_if_no_roll_deg": 25.134634332431798
+    }
+  },
+  "timing": {
+    "wheel": {
+      "count": 4807,
+      "header": {
+        "first_ns": 1790736410654875829,
+        "last_ns": 1790736507634548492,
+        "duration_s": 96.979672663,
+        "rate_hz": 49.55677687942538,
+        "delta_s": {
+          "min": 0.01686987,
+          "max": 0.759993675,
+          "mean": 0.020178874877861006,
+          "median": 0.0199999285,
+          "stddev": 0.010818056465346858
+        },
+        "backward_steps": 0,
+        "gaps_over_100ms": 2,
+        "gaps_over_1s": 0
+      },
+      "header_gap_s": {
+        "count": 4806,
+        "min": 0.01686987,
+        "max": 0.759993675,
+        "mean": 0.02017887487786101,
+        "stddev": 0.01081805646534686,
+        "p50": 0.0199999285,
+        "p90": 0.020026222,
+        "p95": 0.02018529475,
+        "p99": 0.02110914475
+      },
+      "recording_minus_header_s": {
+        "count": 4807,
+        "min": 7.185e-05,
+        "max": 0.560211147,
+        "mean": 0.0027145365525275637,
+        "stddev": 0.027479990321319932,
+        "p50": 0.000274528,
+        "p90": 0.0012260500000000022,
+        "p95": 0.0021313181999999997,
+        "p99": 0.006178484579999915
+      },
+      "header_gap_counts_above_s": {
+        "0.1": 2,
+        "0.2": 1,
+        "0.5": 1,
+        "0.8": 0,
+        "1.0": 0
+      }
+    },
+    "imu": {
+      "count": 2304,
+      "header": {
+        "first_ns": 1790736410957206916,
+        "last_ns": 1790736506317695732,
+        "duration_s": 95.360488816,
+        "rate_hz": 24.150463452884406,
+        "delta_s": {
+          "min": 1.82e-05,
+          "max": 0.706716905,
+          "mean": 0.04140707286843248,
+          "median": 0.0092233,
+          "stddev": 0.07674550570648304
+        },
+        "backward_steps": 0,
+        "gaps_over_100ms": 276,
+        "gaps_over_1s": 0
+      },
+      "header_gap_s": {
+        "count": 2303,
+        "min": 1.82e-05,
+        "max": 0.706716905,
+        "mean": 0.04140707286843248,
+        "stddev": 0.07674550570648304,
+        "p50": 0.0092233,
+        "p90": 0.11386863800000002,
+        "p95": 0.1856002009000001,
+        "p99": 0.37458448270000017
+      },
+      "recording_minus_header_s": {
+        "count": 2304,
+        "min": 4.3843e-05,
+        "max": 1.28519975,
+        "mean": 1.2115974330403647,
+        "stddev": 0.26495274347666803,
+        "p50": 1.2742149034999999,
+        "p90": 1.2765264435,
+        "p95": 1.2775074404500002,
+        "p99": 1.2798769665399998
+      },
+      "header_gap_counts_above_s": {
+        "0.1": 276,
+        "0.2": 103,
+        "0.5": 14,
+        "0.8": 0,
+        "1.0": 0
+      }
+    }
+  },
+  "gyro_odometer_timeout_model": {
+    "received_ns": {
+      "0.2": {
+        "events": 7111,
+        "startup_checks": 16,
+        "timeout_checks": 6992,
+        "publish_batches": 19,
+        "imu_samples_consumed": 70,
+        "wheel_samples_consumed": 28,
+        "latest_input_age_at_callback_s": {
+          "count": 7095,
+          "min": 0.001472113,
+          "max": 1.96515206,
+          "mean": 1.3113117056101482,
+          "stddev": 0.2018611872433464,
+          "p50": 1.293053237,
+          "p90": 1.4578398214,
+          "p95": 1.5478111728,
+          "p99": 1.7667937751399998
+        },
+        "published_batch_latest_header_difference_s": {
+          "count": 19,
+          "min": 0.001359039,
+          "max": 0.015110365,
+          "mean": 0.0031741620526315796,
+          "stddev": 0.0035050588664792925,
+          "p50": 0.001566632,
+          "p90": 0.0073780844,
+          "p95": 0.008152811499999984,
+          "p99": 0.013718854300000003
+        }
+      },
+      "0.5": {
+        "events": 7111,
+        "startup_checks": 16,
+        "timeout_checks": 6951,
+        "publish_batches": 23,
+        "imu_samples_consumed": 111,
+        "wheel_samples_consumed": 32,
+        "latest_input_age_at_callback_s": {
+          "count": 7095,
+          "min": 0.001472113,
+          "max": 1.96515206,
+          "mean": 1.3113117056101482,
+          "stddev": 0.2018611872433464,
+          "p50": 1.293053237,
+          "p90": 1.4578398214,
+          "p95": 1.5478111728,
+          "p99": 1.7667937751399998
+        },
+        "published_batch_latest_header_difference_s": {
+          "count": 23,
+          "min": 0.001359039,
+          "max": 0.328474541,
+          "mean": 0.01849072456521739,
+          "stddev": 0.06628829461694018,
+          "p50": 0.001573539,
+          "p90": 0.0168770642,
+          "p95": 0.0174713061,
+          "p99": 0.26005755874000036
+        }
+      },
+      "0.8": {
+        "events": 7111,
+        "startup_checks": 16,
+        "timeout_checks": 6951,
+        "publish_batches": 23,
+        "imu_samples_consumed": 111,
+        "wheel_samples_consumed": 32,
+        "latest_input_age_at_callback_s": {
+          "count": 7095,
+          "min": 0.001472113,
+          "max": 1.96515206,
+          "mean": 1.3113117056101482,
+          "stddev": 0.2018611872433464,
+          "p50": 1.293053237,
+          "p90": 1.4578398214,
+          "p95": 1.5478111728,
+          "p99": 1.7667937751399998
+        },
+        "published_batch_latest_header_difference_s": {
+          "count": 23,
+          "min": 0.001359039,
+          "max": 0.328474541,
+          "mean": 0.01849072456521739,
+          "stddev": 0.06628829461694018,
+          "p50": 0.001573539,
+          "p90": 0.0168770642,
+          "p95": 0.0174713061,
+          "p99": 0.26005755874000036
+        }
+      },
+      "1.0": {
+        "events": 7111,
+        "startup_checks": 16,
+        "timeout_checks": 6951,
+        "publish_batches": 23,
+        "imu_samples_consumed": 111,
+        "wheel_samples_consumed": 32,
+        "latest_input_age_at_callback_s": {
+          "count": 7095,
+          "min": 0.001472113,
+          "max": 1.96515206,
+          "mean": 1.3113117056101482,
+          "stddev": 0.2018611872433464,
+          "p50": 1.293053237,
+          "p90": 1.4578398214,
+          "p95": 1.5478111728,
+          "p99": 1.7667937751399998
+        },
+        "published_batch_latest_header_difference_s": {
+          "count": 23,
+          "min": 0.001359039,
+          "max": 0.328474541,
+          "mean": 0.01849072456521739,
+          "stddev": 0.06628829461694018,
+          "p50": 0.001573539,
+          "p90": 0.0168770642,
+          "p95": 0.0174713061,
+          "p99": 0.26005755874000036
+        }
+      },
+      "1.5": {
+        "events": 7111,
+        "startup_checks": 16,
+        "timeout_checks": 500,
+        "publish_batches": 1616,
+        "imu_samples_consumed": 2304,
+        "wheel_samples_consumed": 3550,
+        "latest_input_age_at_callback_s": {
+          "count": 7095,
+          "min": 0.001472113,
+          "max": 1.96515206,
+          "mean": 1.3113117056101482,
+          "stddev": 0.2018611872433464,
+          "p50": 1.293053237,
+          "p90": 1.4578398214,
+          "p95": 1.5478111728,
+          "p99": 1.7667937751399998
+        },
+        "published_batch_latest_header_difference_s": {
+          "count": 1616,
+          "min": 0.001359039,
+          "max": 1.297365385,
+          "mean": 1.2538110413465346,
+          "stddev": 0.14967411895203048,
+          "p50": 1.2724209415,
+          "p90": 1.2861432330000002,
+          "p95": 1.28827821075,
+          "p99": 1.291971126
+        }
+      },
+      "2.0": {
+        "events": 7111,
+        "startup_checks": 16,
+        "timeout_checks": 0,
+        "publish_batches": 1653,
+        "imu_samples_consumed": 2304,
+        "wheel_samples_consumed": 4788,
+        "latest_input_age_at_callback_s": {
+          "count": 7095,
+          "min": 0.001472113,
+          "max": 1.96515206,
+          "mean": 1.3113117056101482,
+          "stddev": 0.2018611872433464,
+          "p50": 1.293053237,
+          "p90": 1.4578398214,
+          "p95": 1.5478111728,
+          "p99": 1.7667937751399998
+        },
+        "published_batch_latest_header_difference_s": {
+          "count": 1653,
+          "min": 0.001359039,
+          "max": 1.296026278,
+          "mean": 1.2535097428215365,
+          "stddev": 0.14792229740751883,
+          "p50": 1.271003528,
+          "p90": 1.2852810638,
+          "p95": 1.2878050756,
+          "p99": 1.29111883456
+        }
+      }
+    },
+    "stamp_ns": {
+      "0.2": {
+        "events": 7111,
+        "startup_checks": 16,
+        "timeout_checks": 726,
+        "publish_batches": 1669,
+        "imu_samples_consumed": 2250,
+        "wheel_samples_consumed": 3237,
+        "latest_input_age_at_callback_s": {
+          "count": 7095,
+          "min": 1.401e-06,
+          "max": 1.31685276,
+          "mean": 0.07452684717138831,
+          "stddev": 0.1259668732879256,
+          "p50": 0.019898401,
+          "p90": 0.2043819876,
+          "p95": 0.3197063228999999,
+          "p99": 0.5873754737199949
+        },
+        "published_batch_latest_header_difference_s": {
+          "count": 1669,
+          "min": 1.735e-06,
+          "max": 0.020737892,
+          "mean": 0.007998521517076092,
+          "stddev": 0.005871662406688044,
+          "p50": 0.00673141,
+          "p90": 0.017062108800000003,
+          "p95": 0.018790539199999998,
+          "p99": 0.01974468636
+        }
+      },
+      "0.5": {
+        "events": 7111,
+        "startup_checks": 16,
+        "timeout_checks": 127,
+        "publish_batches": 1703,
+        "imu_samples_consumed": 2250,
+        "wheel_samples_consumed": 4335,
+        "latest_input_age_at_callback_s": {
+          "count": 7095,
+          "min": 1.401e-06,
+          "max": 1.31685276,
+          "mean": 0.07452684717138831,
+          "stddev": 0.1259668732879256,
+          "p50": 0.019898401,
+          "p90": 0.2043819876,
+          "p95": 0.3197063228999999,
+          "p99": 0.5873754737199949
+        },
+        "published_batch_latest_header_difference_s": {
+          "count": 1703,
+          "min": 1.735e-06,
+          "max": 0.020737892,
+          "mean": 0.007934933584850264,
+          "stddev": 0.005855137582227681,
+          "p50": 0.006574579,
+          "p90": 0.0169259948,
+          "p95": 0.018799499299999998,
+          "p99": 0.01977274474
+        }
+      },
+      "0.8": {
+        "events": 7111,
+        "startup_checks": 16,
+        "timeout_checks": 26,
+        "publish_batches": 1714,
+        "imu_samples_consumed": 2304,
+        "wheel_samples_consumed": 4725,
+        "latest_input_age_at_callback_s": {
+          "count": 7095,
+          "min": 1.401e-06,
+          "max": 1.31685276,
+          "mean": 0.07452684717138831,
+          "stddev": 0.1259668732879256,
+          "p50": 0.019898401,
+          "p90": 0.2043819876,
+          "p95": 0.3197063228999999,
+          "p99": 0.5873754737199949
+        },
+        "published_batch_latest_header_difference_s": {
+          "count": 1714,
+          "min": 1.735e-06,
+          "max": 0.027364401,
+          "mean": 0.007915145943990665,
+          "stddev": 0.005864800298796474,
+          "p50": 0.006500575,
+          "p90": 0.0169159564,
+          "p95": 0.01880361265,
+          "p99": 0.01978113204
+        }
+      },
+      "1.0": {
+        "events": 7111,
+        "startup_checks": 16,
+        "timeout_checks": 16,
+        "publish_batches": 1714,
+        "imu_samples_consumed": 2304,
+        "wheel_samples_consumed": 4725,
+        "latest_input_age_at_callback_s": {
+          "count": 7095,
+          "min": 1.401e-06,
+          "max": 1.31685276,
+          "mean": 0.07452684717138831,
+          "stddev": 0.1259668732879256,
+          "p50": 0.019898401,
+          "p90": 0.2043819876,
+          "p95": 0.3197063228999999,
+          "p99": 0.5873754737199949
+        },
+        "published_batch_latest_header_difference_s": {
+          "count": 1714,
+          "min": 1.735e-06,
+          "max": 0.027364401,
+          "mean": 0.007915145943990665,
+          "stddev": 0.005864800298796474,
+          "p50": 0.006500575,
+          "p90": 0.0169159564,
+          "p95": 0.01880361265,
+          "p99": 0.01978113204
+        }
+      },
+      "1.5": {
+        "events": 7111,
+        "startup_checks": 16,
+        "timeout_checks": 0,
+        "publish_batches": 1714,
+        "imu_samples_consumed": 2304,
+        "wheel_samples_consumed": 4725,
+        "latest_input_age_at_callback_s": {
+          "count": 7095,
+          "min": 1.401e-06,
+          "max": 1.31685276,
+          "mean": 0.07452684717138831,
+          "stddev": 0.1259668732879256,
+          "p50": 0.019898401,
+          "p90": 0.2043819876,
+          "p95": 0.3197063228999999,
+          "p99": 0.5873754737199949
+        },
+        "published_batch_latest_header_difference_s": {
+          "count": 1714,
+          "min": 1.735e-06,
+          "max": 0.027364401,
+          "mean": 0.007915145943990665,
+          "stddev": 0.005864800298796474,
+          "p50": 0.006500575,
+          "p90": 0.0169159564,
+          "p95": 0.01880361265,
+          "p99": 0.01978113204
+        }
+      },
+      "2.0": {
+        "events": 7111,
+        "startup_checks": 16,
+        "timeout_checks": 0,
+        "publish_batches": 1714,
+        "imu_samples_consumed": 2304,
+        "wheel_samples_consumed": 4725,
+        "latest_input_age_at_callback_s": {
+          "count": 7095,
+          "min": 1.401e-06,
+          "max": 1.31685276,
+          "mean": 0.07452684717138831,
+          "stddev": 0.1259668732879256,
+          "p50": 0.019898401,
+          "p90": 0.2043819876,
+          "p95": 0.3197063228999999,
+          "p99": 0.5873754737199949
+        },
+        "published_batch_latest_header_difference_s": {
+          "count": 1714,
+          "min": 1.735e-06,
+          "max": 0.027364401,
+          "mean": 0.007915145943990665,
+          "stddev": 0.005864800298796474,
+          "p50": 0.006500575,
+          "p90": 0.0169159564,
+          "p95": 0.01880361265,
+          "p99": 0.01978113204
+        }
+      }
+    }
+  },
+  "initial_map_T_body_source": "one-scan ICP refined initialization, not ground truth",
+  "initial_map_T_body_rpy_deg": [
+    -0.9969818089438939,
+    20.496422748867474,
+    6.389253487928365
+  ],
+  "initial_map_T_base_using_recorded_extrinsic": [
+    [
+      0.6331697755401451,
+      -0.11732034752656119,
+      0.7650699127521687,
+      3.013690135361194
+    ],
+    [
+      0.0621468766432787,
+      0.9929603737046717,
+      0.10083383348702671,
+      -2.4513394163811393
+    ],
+    [
+      -0.7715139668637877,
+      -0.01629823022453732,
+      0.6360035901043706,
+      0.5710361182050773
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "initial_map_T_base_rpy_deg": [
+    -1.467940574150118,
+    50.49003708755986,
+    5.605739527808642
+  ],
+  "needs_user_calibration_clarification": true,
+  "common_header_interval_ns": [
+    1790736410957206916,
+    1790736506317695732
+  ],
+  "wheel_tail_after_last_imu_s": 1.31685276,
+  "recommendations": {
+    "header_ordered_offline_replay_message_timeout_sec": 0.8,
+    "basis": "0.8 s exceeds both observed maximum internal header gaps (IMU 0.7067 s, wheel 0.7600 s); scheduling margin is only ~40 ms for wheel, so this is a bag-test configuration, not a live safety setting.",
+    "replay_semantics": "Sort by original acquisition header and drive /clock on that timeline without changing serialized measurements/header stamps. This removes recorded arrival jitter/latency from the replay experiment and does not verify original live behavior.",
+    "tail": "No new gyro data exists during the final 1.31685276 s of wheel messages; increasing timeout cannot create gyro observations. Report/trim common input coverage explicitly.",
+    "live": "Default 0.2 s timeout is exceeded by the observed recording-minus-header age for most IMU messages. Diagnose clocks, driver stamping and delivery delays before a live choice; do not simply raise timeout to conceal it.",
+    "calibration": "Do not flip pitch or equate livox_frame and body without confirming extrinsic direction and IMU axes. Gravity establishes a discrepancy conditional on identity axes and approximately level base; it does not identify the correct calibration uniquely."
+  }
+}

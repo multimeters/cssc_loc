@@ -1,0 +1,111 @@
+# Single runtime configuration. Relative paths are resolved from this file's directory.
+# RPY uses ROS fixed-axis order Rz(yaw) * Ry(pitch) * Rx(roll).
+schema_version: 1
+paths:
+  bag: ../../zhongchuanbag-20260930T031102Z-1-001/zhongchuanbag/bags/hunter_sensors_20260930_104649
+  map: ../../zhongchuanbag-20260930T031102Z-1-001/zhongchuanbag/GlobalMap_loc.pcd
+  map_metadata: null
+  output_root: ../artifacts/fusion
+runtime:
+  use_sim_time: true
+replay:
+  rate: 0.5
+  domain_id: 58
+  localhost_only: true
+  warmup_seconds: 3.0
+  tail_seconds: 0.2
+  max_bag_seconds: null
+  ready_timeout: 90.0
+  drain_seconds: 1.0
+frames:
+  map: map
+  rear: base_footprint
+  base: base_link  # Locked native EKF constraint; rear_to_base must be identity.
+  lidar: mid360_link
+  cloud: body
+  imu: livox_frame
+  wheel: hunter_base_link
+  ndt_debug: ndt_base_link
+topics:
+  wheel: /hunter_odom
+  imu: /livox/imu
+  points: /cloud_registered_body
+  wheel_twist: /localization/input/wheel_twist
+  imu_base: /localization/input/imu
+  ndt_points: /localization/ndt/input_points
+  initial_pose: /localization/initialpose
+  odometry: /localization/kinematic_state
+  pose: /localization/pose_with_covariance
+  ndt_pose: /localization/pose_estimator/pose_with_covariance
+  ndt_pose_stamped: /localization/pose_estimator/pose
+  ekf_prediction: /localization/pose_twist_fusion_filter/pose_with_covariance
+  ekf_odometry: /localization/internal/ekf_odom
+  gyro_twist: /localization/twist_estimator/twist_with_covariance
+  fusion_status: /localization/fusion_status
+  diagnostics: /diagnostics
+  ekf_tf: /localization/internal/ekf_tf
+  ndt_tf: /localization/internal/ndt_tf
+  metrics_prefix: /localization/pose_estimator
+  clock: /clock
+services:
+  ekf_activation: /localization/ekf/trigger_node
+  ndt_activation: /localization/ndt/trigger_node
+  map_loader: /map/get_differential_pointcloud_map
+extrinsics:
+  rear_to_base:
+    xyz_m: [0.0, 0.0, 0.0]
+    rpy_deg: [0.0, 0.0, 0.0]
+    provenance: user_confirmed_rear_wheel_center_identity
+  rear_to_lidar:
+    xyz_m: [0.432445, 0.0, 0.368458]
+    rpy_deg: [0.0, 25.06895, 0.0]
+    provenance: provisional_forward_tilt_from_static_gravity_user_authorized
+    confirmed_for_replay: true
+    calibration_verified: false
+  lidar_to_cloud:
+    xyz_m: [0.0, 0.0, 0.0]
+    rpy_deg: [0.0, 0.0, 0.0]
+    provenance: user_confirmed_body_equals_mid360_origin_and_axes
+  lidar_to_imu:
+    xyz_m: [0.011, 0.02329, -0.04412]
+    rpy_deg: [0.0, 0.0, 0.0]
+    provenance: official_mid360_user_manual_2024_imu_axes_and_origin
+    axes_confirmed: true
+initial_pose:
+  reference: cloud
+  xyz_m: [3.569397, -2.387311, 0.471739]
+  rpy_rad: [-0.017401, 0.357730, 0.111514]
+  covariance_diagonal: [0.25, 0.25, 0.25, 0.04, 0.04, 0.04]
+  provenance: first_scan_icp_map_to_body_seed_reports_new_bag_initial_registration
+adapter:
+  wheel_variance_floor: 0.0025
+  angular_variance_floor: 0.0004
+  sensor_timeout: 0.25
+  ndt_timeout: 0.5
+  prediction_timeout: 1.0
+  future_tolerance: 0.1
+  scan_wait_timeout: 1.0
+  scan_relay_delay: 0.02
+  voxel_size: 0.0
+  max_pending_scans: 30
+  publish_tf: true
+  tick_period: 0.01
+  status_period: 0.5
+  sensor_queue_depth: 100
+  cloud_queue_depth: 10
+  output_queue_depth: 100
+  initial_pose_queue_depth: 1
+  status_queue_depth: 1
+native_parameters:
+  gyro: native/gyro.yaml
+  ekf: native/ekf.yaml
+  ndt: native/ndt.yaml
+  map_loader: native/map_loader.yaml
+# Output/coverage checks only. Passing these does not establish physical accuracy.
+validation:
+  min_gyro_messages: 100
+  min_ndt_acceptance_ratio: 0.9
+  min_ekf_messages: 100
+  max_pose_step_m: 2.0
+  max_pose_gap_s: 1.0
+  min_update_span_ratio: 0.8

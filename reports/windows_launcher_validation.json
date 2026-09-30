@@ -1,0 +1,20 @@
+{
+  "created_utc": "2026-09-30T05:26:18.7960263Z",
+  "windows_powershell_51_compatible": true,
+  "actual_cmd_check_exit_code": 0,
+  "actual_cmd_check_with_explicit_windows_config_and_forwarded_duration_passed": true,
+  "launched_localization": false,
+  "build_triggered": false,
+  "actual_help_exit_code": 0,
+  "actual_ps_check_exit_code": 0,
+  "fixture_directory_special_characters": "Chinese, spaces, ampersand, apostrophe",
+  "fixture_config_windows_to_wsl_path_passed": true,
+  "fixture_shell_metacharacter_literal_forwarding_passed": true,
+  "fixture_empty_argument_preserved": true,
+  "fixture_trailing_backslash_preserved": true,
+  "fixture_cmd_success_exit_code": 0,
+  "fixture_cmd_failure_exit_code": 23,
+  "fixture_error_only_pause_observed": true,
+  "evaluator_nonzero_roll_or_yaw": "Explicitly rejected as unsupported pitch-only transform; launch pipeline can still use complete YAML rotation.",
+  "fixture_equals_option_windows_path_conversion_passed": true
+}

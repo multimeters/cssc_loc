@@ -1,0 +1,2962 @@
+{
+  "generated_utc": "2026-09-30T03:20:44.227713+00:00",
+  "bag": {
+    "name": "hunter_sensors_20260930_104649",
+    "database": "/mnt/e/zhongchuandingwei/zhongchuanbag-20260930T031102Z-1-001/zhongchuanbag/bags/hunter_sensors_20260930_104649/hunter_sensors_20260930_104649_0.db3",
+    "bytes": 661262336,
+    "sha256": "47d2137c342c2ef76a5ade75970edcd2869c95a8f01fb5345cb1f943a64330d6",
+    "sqlite_integrity": "ok",
+    "topics": [
+      {
+        "name": "/cloud_registered_body",
+        "type": "sensor_msgs/msg/PointCloud2",
+        "serialization": "cdr",
+        "count": 969,
+        "recording_timing": {
+          "first_ns": 1790736411214742282,
+          "last_ns": 1790736507649366389,
+          "duration_s": 96.434624107,
+          "rate_hz": 10.037888455146005,
+          "delta_s": {
+            "min": 3.1806e-05,
+            "max": 0.492228519,
+            "mean": 0.09962254556508264,
+            "median": 0.056292235499999996,
+            "stddev": 0.07917484051458212
+          },
+          "backward_steps": 0,
+          "gaps_over_100ms": 338,
+          "gaps_over_1s": 0
+        },
+        "frame_ids": [
+          "body"
+        ],
+        "header_timing": {
+          "first_ns": 1790736409520505428,
+          "last_ns": 1790736506321407794,
+          "duration_s": 96.800902366,
+          "rate_hz": 9.999906781240883,
+          "delta_s": {
+            "min": 0.092893601,
+            "max": 0.107044936,
+            "mean": 0.10000093219628099,
+            "median": 0.09998738800000001,
+            "stddev": 0.001192366146587283
+          },
+          "backward_steps": 0,
+          "gaps_over_100ms": 471,
+          "gaps_over_1s": 0
+        },
+        "recording_minus_header_s": {
+          "min": 1.278684168,
+          "max": 1.912316787,
+          "mean": 1.4191363974035087,
+          "median": 1.388615894,
+          "stddev": 0.08287523048881239
+        },
+        "point_count": {
+          "min": 5303,
+          "max": 6173,
+          "mean": 5740.09907120743,
+          "median": 5741,
+          "stddev": 101.13832239628697
+        },
+        "first_message": {
+          "stamp_ns": 1790736409520505428,
+          "frame_id": "body",
+          "height": 1,
+          "width": 5724,
+          "fields": [
+            {
+              "name": "x",
+              "offset": 0,
+              "datatype": 7,
+              "count": 1
+            },
+            {
+              "name": "y",
+              "offset": 4,
+              "datatype": 7,
+              "count": 1
+            },
+            {
+              "name": "z",
+              "offset": 8,
+              "datatype": 7,
+              "count": 1
+            },
+            {
+              "name": "intensity",
+              "offset": 32,
+              "datatype": 7,
+              "count": 1
+            },
+            {
+              "name": "normal_x",
+              "offset": 16,
+              "datatype": 7,
+              "count": 1
+            },
+            {
+              "name": "normal_y",
+              "offset": 20,
+              "datatype": 7,
+              "count": 1
+            },
+            {
+              "name": "normal_z",
+              "offset": 24,
+              "datatype": 7,
+              "count": 1
+            },
+            {
+              "name": "curvature",
+              "offset": 36,
+              "datatype": 7,
+              "count": 1
+            }
+          ],
+          "is_bigendian": false,
+          "point_step": 48,
+          "row_step": 274752,
+          "is_dense": true,
+          "point_count": 5724,
+          "columns": [
+            "x",
+            "y",
+            "z",
+            "intensity"
+          ],
+          "finite_xyz_points": 5724
+        },
+        "last_message": {
+          "stamp_ns": 1790736506321407794,
+          "frame_id": "body",
+          "height": 1,
+          "width": 5615,
+          "fields": [
+            {
+              "name": "x",
+              "offset": 0,
+              "datatype": 7,
+              "count": 1
+            },
+            {
+              "name": "y",
+              "offset": 4,
+              "datatype": 7,
+              "count": 1
+            },
+            {
+              "name": "z",
+              "offset": 8,
+              "datatype": 7,
+              "count": 1
+            },
+            {
+              "name": "intensity",
+              "offset": 32,
+              "datatype": 7,
+              "count": 1
+            },
+            {
+              "name": "normal_x",
+              "offset": 16,
+              "datatype": 7,
+              "count": 1
+            },
+            {
+              "name": "normal_y",
+              "offset": 20,
+              "datatype": 7,
+              "count": 1
+            },
+            {
+              "name": "normal_z",
+              "offset": 24,
+              "datatype": 7,
+              "count": 1
+            },
+            {
+              "name": "curvature",
+              "offset": 36,
+              "datatype": 7,
+              "count": 1
+            }
+          ],
+          "is_bigendian": false,
+          "point_step": 48,
+          "row_step": 269520,
+          "is_dense": true,
+          "point_count": 5615,
+          "columns": [
+            "x",
+            "y",
+            "z",
+            "intensity"
+          ],
+          "finite_xyz_points": 5615
+        }
+      },
+      {
+        "name": "/hunter_odom",
+        "type": "nav_msgs/msg/Odometry",
+        "serialization": "cdr",
+        "count": 4807,
+        "recording_timing": {
+          "first_ns": 1790736410655239856,
+          "last_ns": 1790736507634779322,
+          "duration_s": 96.979539466,
+          "rate_hz": 49.55684494341131,
+          "delta_s": {
+            "min": 5.28e-06,
+            "max": 0.999065671,
+            "mean": 0.020178847163129423,
+            "median": 0.019996320499999998,
+            "stddev": 0.015747186687770434
+          },
+          "backward_steps": 0,
+          "gaps_over_100ms": 3,
+          "gaps_over_1s": 0
+        },
+        "header_timing": {
+          "first_ns": 1790736410654875829,
+          "last_ns": 1790736507634548492,
+          "duration_s": 96.979672663,
+          "rate_hz": 49.55677687942538,
+          "delta_s": {
+            "min": 0.01686987,
+            "max": 0.759993675,
+            "mean": 0.020178874877861006,
+            "median": 0.0199999285,
+            "stddev": 0.010818056465346858
+          },
+          "backward_steps": 0,
+          "gaps_over_100ms": 2,
+          "gaps_over_1s": 0
+        },
+        "recording_minus_header_s": {
+          "min": 7.185e-05,
+          "max": 0.560211147,
+          "mean": 0.002714536552527564,
+          "median": 0.000274528,
+          "stddev": 0.027479990321319932
+        },
+        "frame_ids": [
+          "hunter_odom"
+        ],
+        "orientation_norm": {
+          "min": 0.9999999999999999,
+          "max": 1.0,
+          "mean": 0.9999999999999999,
+          "median": 0.9999999999999999,
+          "stddev": 5.427449498922795e-17
+        },
+        "angular_velocity": {
+          "x": {
+            "min": 0.0,
+            "max": 0.0,
+            "mean": 0.0,
+            "median": 0.0,
+            "stddev": 0.0
+          },
+          "y": {
+            "min": 0.0,
+            "max": 0.0,
+            "mean": 0.0,
+            "median": 0.0,
+            "stddev": 0.0
+          },
+          "z": {
+            "min": -0.7132132214589216,
+            "max": 0.5968525286905338,
+            "mean": 0.07693814161202403,
+            "median": 0.0,
+            "stddev": 0.21199900076230974
+          }
+        },
+        "first_message": {
+          "stamp_ns": 1790736410654875829,
+          "frame_id": "hunter_odom",
+          "child_frame_id": "hunter_base_link",
+          "position": [
+            2.9392353108560263,
+            -0.209025285770582,
+            0.0
+          ],
+          "orientation": [
+            0.0,
+            0.0,
+            -0.10228635362782074,
+            0.9947549958967405
+          ],
+          "pose_covariance": [
+            0.001,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.001,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1000000.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1000000.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1000000.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1000.0
+          ],
+          "linear_velocity": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "angular_velocity": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "twist_covariance": [
+            0.001,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.001,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1000000.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1000000.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1000000.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1000.0
+          ]
+        },
+        "last_message": {
+          "stamp_ns": 1790736507634548492,
+          "frame_id": "hunter_odom",
+          "child_frame_id": "hunter_base_link",
+          "position": [
+            2.2021017882996587,
+            -0.4267140478937757,
+            0.0
+          ],
+          "orientation": [
+            0.0,
+            -0.0,
+            -0.45659031624689395,
+            -0.8896770667548767
+          ],
+          "pose_covariance": [
+            0.001,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.001,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1000000.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1000000.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1000000.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1000.0
+          ],
+          "linear_velocity": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "angular_velocity": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "twist_covariance": [
+            0.001,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.001,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1000000.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1000000.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1000000.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1000.0
+          ]
+        },
+        "child_frame_ids": [
+          "hunter_base_link"
+        ],
+        "linear_velocity": {
+          "x": {
+            "min": -1.069000005722046,
+            "max": 0.6980000138282776,
+            "mean": 0.09012814642706395,
+            "median": 0.0,
+            "stddev": 0.3908812062342777
+          },
+          "y": {
+            "min": 0.0,
+            "max": 0.0,
+            "mean": 0.0,
+            "median": 0.0,
+            "stddev": 0.0
+          },
+          "z": {
+            "min": 0.0,
+            "max": 0.0,
+            "mean": 0.0,
+            "median": 0.0,
+            "stddev": 0.0
+          }
+        },
+        "position": {
+          "x": {
+            "min": -1.911359658341422,
+            "max": 3.4778390692782057,
+            "mean": 1.2514705501621899,
+            "median": 1.8127584114538093,
+            "stddev": 1.5915839977710426
+          },
+          "y": {
+            "min": -1.4606126296536843,
+            "max": 1.795342180323586,
+            "mean": -0.027377314037008275,
+            "median": -0.209025285770582,
+            "stddev": 0.6047234311487285
+          },
+          "z": {
+            "min": 0.0,
+            "max": 0.0,
+            "mean": 0.0,
+            "median": 0.0,
+            "stddev": 0.0
+          }
+        },
+        "path_length_m": 28.904420415159432,
+        "endpoint_displacement_m": 0.7686053780914411,
+        "pose_covariance_all_zero": false,
+        "twist_covariance_all_zero": false,
+        "recorded_wheel_odom_csv": "hunter_sensors_20260930_104649_recorded_wheel_odom.csv"
+      },
+      {
+        "name": "/livox/imu",
+        "type": "sensor_msgs/msg/Imu",
+        "serialization": "cdr",
+        "count": 2304,
+        "recording_timing": {
+          "first_ns": 1790736410961483589,
+          "last_ns": 1790736507592838262,
+          "duration_s": 96.631354673,
+          "rate_hz": 23.832843985198593,
+          "delta_s": {
+            "min": 4.592e-06,
+            "max": 1.073886502,
+            "mean": 0.04195890346200608,
+            "median": 0.00926075,
+            "stddev": 0.08116253737650256
+          },
+          "backward_steps": 0,
+          "gaps_over_100ms": 286,
+          "gaps_over_1s": 1
+        },
+        "header_timing": {
+          "first_ns": 1790736410957206916,
+          "last_ns": 1790736506317695732,
+          "duration_s": 95.360488816,
+          "rate_hz": 24.150463452884406,
+          "delta_s": {
+            "min": 1.82e-05,
+            "max": 0.706716905,
+            "mean": 0.04140707286843248,
+            "median": 0.0092233,
+            "stddev": 0.07674550570648304
+          },
+          "backward_steps": 0,
+          "gaps_over_100ms": 276,
+          "gaps_over_1s": 0
+        },
+        "recording_minus_header_s": {
+          "min": 4.3843e-05,
+          "max": 1.28519975,
+          "mean": 1.2115974330403645,
+          "median": 1.2742149034999999,
+          "stddev": 0.26495274347666803
+        },
+        "frame_ids": [
+          "livox_frame"
+        ],
+        "orientation_norm": {
+          "min": 1.0,
+          "max": 1.0,
+          "mean": 1.0,
+          "median": 1.0,
+          "stddev": 0.0
+        },
+        "angular_velocity": {
+          "x": {
+            "min": -0.25679636001586914,
+            "max": 0.27157482504844666,
+            "mean": -0.04343691637768643,
+            "median": -0.012850788421928883,
+            "stddev": 0.08069029226173152
+          },
+          "y": {
+            "min": -0.053779199719429016,
+            "max": 0.07085675001144409,
+            "mean": -0.0014508563524739454,
+            "median": -0.0015812404453754425,
+            "stddev": 0.00905979129071411
+          },
+          "z": {
+            "min": -0.6129750609397888,
+            "max": 0.5108789205551147,
+            "mean": 0.0692953704710817,
+            "median": 0.0006172508001327515,
+            "stddev": 0.17464004557122484
+          }
+        },
+        "first_message": {
+          "stamp_ns": 1790736410957206916,
+          "frame_id": "livox_frame",
+          "orientation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "orientation_covariance": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "angular_velocity": [
+            -0.0085897296667099,
+            -0.0015812404453754425,
+            0.0006172508001327515
+          ],
+          "angular_velocity_covariance": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "linear_acceleration": [
+            -0.42074406147003174,
+            0.0009282045066356659,
+            0.9004711508750916
+          ],
+          "linear_acceleration_covariance": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "last_message": {
+          "stamp_ns": 1790736506317695732,
+          "frame_id": "livox_frame",
+          "orientation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "orientation_covariance": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "angular_velocity": [
+            -0.012850788421928883,
+            -0.0026465049013495445,
+            0.0016825124621391296
+          ],
+          "angular_velocity_covariance": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "linear_acceleration": [
+            -0.42391788959503174,
+            0.001172345131635666,
+            0.9041332602500916
+          ],
+          "linear_acceleration_covariance": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "linear_acceleration": {
+          "x": {
+            "min": -0.6097089052200317,
+            "max": -0.052824150770902634,
+            "mean": -0.42258179189553224,
+            "median": -0.42123234272003174,
+            "stddev": 0.033132795662637875
+          },
+          "y": {
+            "min": -0.08305616676807404,
+            "max": 0.12666063010692596,
+            "mean": 0.008446019267365854,
+            "median": 0.002393048256635666,
+            "stddev": 0.02234981689505696
+          },
+          "z": {
+            "min": 0.7674145102500916,
+            "max": 1.0359691381454468,
+            "mean": 0.8996380632225838,
+            "median": 0.8999828696250916,
+            "stddev": 0.02080724797236545
+          }
+        },
+        "linear_acceleration_norm": {
+          "min": 0.8521661484194348,
+          "max": 1.1094827161437133,
+          "mean": 0.9948056320252225,
+          "median": 0.9942169871344292,
+          "stddev": 0.019681041759293368
+        },
+        "orientation_covariance_all_zero": true,
+        "angular_velocity_covariance_all_zero": true,
+        "linear_acceleration_covariance_all_zero": true
+      },
+      {
+        "name": "/livox/lidar",
+        "type": "livox_ros_driver2/msg/CustomMsg",
+        "serialization": "cdr",
+        "count": 967,
+        "recording_timing": {
+          "first_ns": 1790736411023686413,
+          "last_ns": 1790736507623758496,
+          "duration_s": 96.600072083,
+          "rate_hz": 9.999992537997286,
+          "delta_s": {
+            "min": 5.8429e-05,
+            "max": 0.921818417,
+            "mean": 0.10000007462008281,
+            "median": 0.0999453095,
+            "stddev": 0.028146123802490614
+          },
+          "backward_steps": 0,
+          "gaps_over_100ms": 467,
+          "gaps_over_1s": 0
+        },
+        "frame_ids": [
+          "livox_frame"
+        ],
+        "header_timing": {
+          "first_ns": 1790736410920504735,
+          "last_ns": 1790736507520231734,
+          "duration_s": 96.599726999,
+          "rate_hz": 10.000028261052954,
+          "delta_s": {
+            "min": 0.092334924,
+            "max": 0.107359514,
+            "mean": 0.09999971739026915,
+            "median": 0.10000524,
+            "stddev": 0.0013036401979343065
+          },
+          "backward_steps": 0,
+          "gaps_over_100ms": 488,
+          "gaps_over_1s": 0
+        },
+        "recording_minus_header_s": {
+          "min": 0.097559054,
+          "max": 0.925026821,
+          "mean": 0.10832185437331955,
+          "median": 0.103504557,
+          "stddev": 0.04867791244497312
+        },
+        "point_count": {
+          "min": 18432,
+          "max": 21216,
+          "mean": 19999.172699069288,
+          "median": 19968,
+          "stddev": 274.32326841493517
+        },
+        "first_message": {
+          "stamp_ns": 1790736410920504735,
+          "frame_id": "livox_frame",
+          "timebase": 1790736410920504735,
+          "point_num": 19968,
+          "lidar_id": 192,
+          "reserved": [
+            0,
+            0,
+            0
+          ],
+          "sequence_point_count": 19968
+        },
+        "last_message": {
+          "stamp_ns": 1790736507520231734,
+          "frame_id": "livox_frame",
+          "timebase": 1790736507520231734,
+          "point_num": 20832,
+          "lidar_id": 192,
+          "reserved": [
+            0,
+            0,
+            0
+          ],
+          "sequence_point_count": 20832
+        }
+      },
+      {
+        "name": "/tf",
+        "type": "tf2_msgs/msg/TFMessage",
+        "serialization": "cdr",
+        "count": 1628,
+        "recording_timing": {
+          "first_ns": 1790736410655253382,
+          "last_ns": 1790736507334687327,
+          "duration_s": 96.679433945,
+          "rate_hz": 16.8288118125059,
+          "delta_s": {
+            "min": 4.576e-06,
+            "max": 5.212529755,
+            "mean": 0.059421901625691456,
+            "median": 5.9615e-05,
+            "stddev": 0.20339722344627179
+          },
+          "backward_steps": 0,
+          "gaps_over_100ms": 254,
+          "gaps_over_1s": 11
+        }
+      },
+      {
+        "name": "/tf_static",
+        "type": "tf2_msgs/msg/TFMessage",
+        "serialization": "cdr",
+        "count": 11,
+        "recording_timing": {
+          "first_ns": 1790736409996984710,
+          "last_ns": 1790736412189076898,
+          "duration_s": 2.192092188,
+          "rate_hz": 4.561851939777999,
+          "delta_s": {
+            "min": 0.000422006,
+            "max": 1.090342993,
+            "mean": 0.2192092188,
+            "median": 0.004436394,
+            "stddev": 0.4008281538110779
+          },
+          "backward_steps": 0,
+          "gaps_over_100ms": 3,
+          "gaps_over_1s": 1
+        }
+      }
+    ],
+    "tf_edges": [
+      {
+        "topic": "/tf",
+        "parent": "camera_init",
+        "child": "body",
+        "count": 425,
+        "header_timing": {
+          "first_ns": 1790736409220743656,
+          "last_ns": 1790736495920964956,
+          "duration_s": 86.7002213,
+          "rate_hz": 4.89041427625514,
+          "delta_s": {
+            "min": 0.095527172,
+            "max": 2.799455881,
+            "mean": 0.20448165400943397,
+            "median": 0.100124955,
+            "stddev": 0.32116196858725515
+          },
+          "backward_steps": 0,
+          "gaps_over_100ms": 253,
+          "gaps_over_1s": 15
+        },
+        "first": {
+          "stamp_ns": 1790736409220743656,
+          "frame_id": "camera_init",
+          "child_frame_id": "body",
+          "translation": [
+            1.7375409830731492,
+            -1.7421209885772315,
+            0.8454474642005004
+          ],
+          "rotation": [
+            0.11923316306145106,
+            -0.007456730996454371,
+            -0.2682921488777804,
+            0.9559012359232189
+          ],
+          "received_ns": 1790736410965394427
+        },
+        "last": {
+          "stamp_ns": 1790736495920964956,
+          "frame_id": "camera_init",
+          "child_frame_id": "body",
+          "translation": [
+            -0.46125983033674267,
+            -1.9874128081166245,
+            -0.17880589078621056
+          ],
+          "rotation": [
+            -0.16109648354868325,
+            0.010688033160940994,
+            0.355966210854749,
+            -0.920446492559377
+          ],
+          "received_ns": 1790736507200200747
+        },
+        "distinct_values": 425
+      },
+      {
+        "topic": "/tf",
+        "parent": "hunter_odom",
+        "child": "hunter_base_link",
+        "count": 725,
+        "header_timing": {
+          "first_ns": 1790736410654875829,
+          "last_ns": 1790736505354524880,
+          "duration_s": 94.699649051,
+          "rate_hz": 7.645223686204937,
+          "delta_s": {
+            "min": 0.016894186,
+            "max": 5.279996587,
+            "mean": 0.13080062023618785,
+            "median": 0.020003640000000003,
+            "stddev": 0.43174397865480263
+          },
+          "backward_steps": 0,
+          "gaps_over_100ms": 111,
+          "gaps_over_1s": 22
+        },
+        "first": {
+          "stamp_ns": 1790736410654875829,
+          "frame_id": "hunter_odom",
+          "child_frame_id": "hunter_base_link",
+          "translation": [
+            2.9392353108560263,
+            -0.209025285770582,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.10228635362782074,
+            0.9947549958967405
+          ],
+          "received_ns": 1790736410655253382
+        },
+        "last": {
+          "stamp_ns": 1790736505354524880,
+          "frame_id": "hunter_odom",
+          "child_frame_id": "hunter_base_link",
+          "translation": [
+            2.2021017882996587,
+            -0.4267140478937757,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            -0.0,
+            -0.45659031624689395,
+            -0.8896770667548767
+          ],
+          "received_ns": 1790736507334687327
+        },
+        "distinct_values": 322
+      },
+      {
+        "topic": "/tf",
+        "parent": "map",
+        "child": "base_footprint",
+        "count": 265,
+        "header_timing": {
+          "first_ns": 1790736410651128771,
+          "last_ns": 1790736503301914479,
+          "duration_s": 92.650785708,
+          "rate_hz": 2.849409187225109,
+          "delta_s": {
+            "min": 0.044385864,
+            "max": 9.150001611,
+            "mean": 0.35094994586363637,
+            "median": 0.0999729305,
+            "stddev": 0.6865219533795842
+          },
+          "backward_steps": 0,
+          "gaps_over_100ms": 130,
+          "gaps_over_1s": 29
+        },
+        "first": {
+          "stamp_ns": 1790736410651128771,
+          "frame_id": "map",
+          "child_frame_id": "base_footprint",
+          "translation": [
+            2.990338672650151,
+            -2.442729628015536,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0462047674485438,
+            0.9989319894092019
+          ],
+          "received_ns": 1790736410948431048
+        },
+        "last": {
+          "stamp_ns": 1790736503301914479,
+          "frame_id": "map",
+          "child_frame_id": "base_footprint",
+          "translation": [
+            2.6184498330118138,
+            -3.6287189512551765,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.30388318317495433,
+            0.9527093003552852
+          ],
+          "received_ns": 1790736505805247554
+        },
+        "distinct_values": 190
+      },
+      {
+        "topic": "/tf",
+        "parent": "map",
+        "child": "camera_init",
+        "count": 213,
+        "header_timing": {
+          "first_ns": 1790736410651128771,
+          "last_ns": 1790736504750934001,
+          "duration_s": 94.09980523,
+          "rate_hz": 2.252927086106361,
+          "delta_s": {
+            "min": 0.044830243,
+            "max": 5.75195124,
+            "mean": 0.4438670058018868,
+            "median": 0.054785737,
+            "stddev": 0.7896326613922423
+          },
+          "backward_steps": 0,
+          "gaps_over_100ms": 100,
+          "gaps_over_1s": 33
+        },
+        "first": {
+          "stamp_ns": 1790736410651128771,
+          "frame_id": "map",
+          "child_frame_id": "camera_init",
+          "translation": [
+            0.9456710332746581,
+            -2.3358407168240634,
+            0.27514958613596663
+          ],
+          "rotation": [
+            -0.08777536280336244,
+            0.1800040123600255,
+            0.33855779328263214,
+            0.9193871120625002
+          ],
+          "received_ns": 1790736410948382211
+        },
+        "last": {
+          "stamp_ns": 1790736504750934001,
+          "frame_id": "map",
+          "child_frame_id": "camera_init",
+          "translation": [
+            0.9567942611342437,
+            -2.3431699581949608,
+            0.28635648803418984
+          ],
+          "rotation": [
+            -0.08962362414736595,
+            0.17837989559767242,
+            0.3451773198012505,
+            0.9170609776542019
+          ],
+          "received_ns": 1790736507206937089
+        },
+        "distinct_values": 147
+      },
+      {
+        "topic": "/tf_static",
+        "parent": "base_footprint",
+        "child": "base_link",
+        "count": 1,
+        "header_timing": {
+          "first_ns": 1790735543830497208,
+          "last_ns": 1790735543830497208,
+          "duration_s": 0.0,
+          "rate_hz": null,
+          "delta_s": null,
+          "backward_steps": 0,
+          "gaps_over_100ms": 0,
+          "gaps_over_1s": 0
+        },
+        "first": {
+          "stamp_ns": 1790735543830497208,
+          "frame_id": "base_footprint",
+          "child_frame_id": "base_link",
+          "translation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "received_ns": 1790736412189076898
+        },
+        "last": {
+          "stamp_ns": 1790735543830497208,
+          "frame_id": "base_footprint",
+          "child_frame_id": "base_link",
+          "translation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "received_ns": 1790736412189076898
+        },
+        "distinct_values": 1
+      },
+      {
+        "topic": "/tf_static",
+        "parent": "base_footprint",
+        "child": "mid360_link",
+        "count": 2,
+        "header_timing": {
+          "first_ns": 1790735543826042958,
+          "last_ns": 1790735543797458995,
+          "duration_s": -0.028583963,
+          "rate_hz": null,
+          "delta_s": {
+            "min": -0.028583963,
+            "max": -0.028583963,
+            "mean": -0.028583963,
+            "median": -0.028583963,
+            "stddev": 0.0
+          },
+          "backward_steps": 1,
+          "gaps_over_100ms": 0,
+          "gaps_over_1s": 0
+        },
+        "first": {
+          "stamp_ns": 1790735543826042958,
+          "frame_id": "base_footprint",
+          "child_frame_id": "mid360_link",
+          "translation": [
+            0.432445,
+            0.0,
+            0.368458
+          ],
+          "rotation": [
+            0.0,
+            -0.25881904510252074,
+            0.0,
+            0.9659258262890683
+          ],
+          "received_ns": 1790736410939436386
+        },
+        "last": {
+          "stamp_ns": 1790735543797458995,
+          "frame_id": "base_footprint",
+          "child_frame_id": "mid360_link",
+          "translation": [
+            0.432445,
+            0.0,
+            0.368458
+          ],
+          "rotation": [
+            0.0,
+            -0.25881904510252074,
+            0.0,
+            0.9659258262890683
+          ],
+          "received_ns": 1790736410945660268
+        },
+        "distinct_values": 1
+      },
+      {
+        "topic": "/tf_static",
+        "parent": "base_footprint",
+        "child": "ultrasonic_1",
+        "count": 2,
+        "header_timing": {
+          "first_ns": 1790735543819655212,
+          "last_ns": 1790735543800095581,
+          "duration_s": -0.019559631,
+          "rate_hz": null,
+          "delta_s": {
+            "min": -0.019559631,
+            "max": -0.019559631,
+            "mean": -0.019559631,
+            "median": -0.019559631,
+            "stddev": 0.0
+          },
+          "backward_steps": 1,
+          "gaps_over_100ms": 0,
+          "gaps_over_1s": 0
+        },
+        "first": {
+          "stamp_ns": 1790735543819655212,
+          "frame_id": "base_footprint",
+          "child_frame_id": "ultrasonic_1",
+          "translation": [
+            0.6,
+            0.18,
+            0.23
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.3826834323650898,
+            0.9238795325112867
+          ],
+          "received_ns": 1790736410943954847
+        },
+        "last": {
+          "stamp_ns": 1790735543800095581,
+          "frame_id": "base_footprint",
+          "child_frame_id": "ultrasonic_1",
+          "translation": [
+            0.6,
+            0.18,
+            0.23
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.3826834323650898,
+            0.9238795325112867
+          ],
+          "received_ns": 1790736412049776464
+        },
+        "distinct_values": 1
+      },
+      {
+        "topic": "/tf_static",
+        "parent": "base_footprint",
+        "child": "ultrasonic_2",
+        "count": 2,
+        "header_timing": {
+          "first_ns": 1790735543780549094,
+          "last_ns": 1790735543845275579,
+          "duration_s": 0.064726485,
+          "rate_hz": 15.449626223330373,
+          "delta_s": {
+            "min": 0.064726485,
+            "max": 0.064726485,
+            "mean": 0.064726485,
+            "median": 0.064726485,
+            "stddev": 0.0
+          },
+          "backward_steps": 0,
+          "gaps_over_100ms": 0,
+          "gaps_over_1s": 0
+        },
+        "first": {
+          "stamp_ns": 1790735543780549094,
+          "frame_id": "base_footprint",
+          "child_frame_id": "ultrasonic_2",
+          "translation": [
+            0.6,
+            -0.18,
+            0.23
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.3826834323650898,
+            0.9238795325112867
+          ],
+          "received_ns": 1790736410938823121
+        },
+        "last": {
+          "stamp_ns": 1790735543845275579,
+          "frame_id": "base_footprint",
+          "child_frame_id": "ultrasonic_2",
+          "translation": [
+            0.6,
+            -0.18,
+            0.23
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.3826834323650898,
+            0.9238795325112867
+          ],
+          "received_ns": 1790736412188387741
+        },
+        "distinct_values": 1
+      },
+      {
+        "topic": "/tf_static",
+        "parent": "base_footprint",
+        "child": "ultrasonic_3",
+        "count": 2,
+        "header_timing": {
+          "first_ns": 1790735543785250742,
+          "last_ns": 1790735543791424129,
+          "duration_s": 0.006173387,
+          "rate_hz": 161.98563284628034,
+          "delta_s": {
+            "min": 0.006173387,
+            "max": 0.006173387,
+            "mean": 0.006173387,
+            "median": 0.006173387,
+            "stddev": 0.0
+          },
+          "backward_steps": 0,
+          "gaps_over_100ms": 0,
+          "gaps_over_1s": 0
+        },
+        "first": {
+          "stamp_ns": 1790735543785250742,
+          "frame_id": "base_footprint",
+          "child_frame_id": "ultrasonic_3",
+          "translation": [
+            -0.06,
+            0.18,
+            0.23
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.9238795325112867,
+            0.38268343236508984
+          ],
+          "received_ns": 1790736409996984710
+        },
+        "last": {
+          "stamp_ns": 1790735543791424129,
+          "frame_id": "base_footprint",
+          "child_frame_id": "ultrasonic_3",
+          "translation": [
+            -0.06,
+            0.18,
+            0.23
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.9238795325112867,
+            0.38268343236508984
+          ],
+          "received_ns": 1790736410001339037
+        },
+        "distinct_values": 1
+      },
+      {
+        "topic": "/tf_static",
+        "parent": "base_footprint",
+        "child": "ultrasonic_4",
+        "count": 2,
+        "header_timing": {
+          "first_ns": 1790735543812467995,
+          "last_ns": 1790735543806447640,
+          "duration_s": -0.006020355,
+          "rate_hz": null,
+          "delta_s": {
+            "min": -0.006020355,
+            "max": -0.006020355,
+            "mean": -0.006020355,
+            "median": -0.006020355,
+            "stddev": 0.0
+          },
+          "backward_steps": 1,
+          "gaps_over_100ms": 0,
+          "gaps_over_1s": 0
+        },
+        "first": {
+          "stamp_ns": 1790735543812467995,
+          "frame_id": "base_footprint",
+          "child_frame_id": "ultrasonic_4",
+          "translation": [
+            -0.06,
+            -0.18,
+            0.23
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.9238795325112867,
+            0.38268343236508984
+          ],
+          "received_ns": 1790736410946082274
+        },
+        "last": {
+          "stamp_ns": 1790735543806447640,
+          "frame_id": "base_footprint",
+          "child_frame_id": "ultrasonic_4",
+          "translation": [
+            -0.06,
+            -0.18,
+            0.23
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            -0.9238795325112867,
+            0.38268343236508984
+          ],
+          "received_ns": 1790736410959433471
+        },
+        "distinct_values": 1
+      }
+    ],
+    "message_count": 10686,
+    "start_ns": 1790736409996984710,
+    "end_ns": 1790736507649366389,
+    "duration_s": 97.652381679,
+    "has_pointcloud": true
+  },
+  "maps": [
+    {
+      "name": "GlobalMap_loc.pcd",
+      "source": "/mnt/e/zhongchuandingwei/zhongchuanbag-20260930T031102Z-1-001/zhongchuanbag/GlobalMap_loc.pcd",
+      "sha256": "73b3a6bf8c361b5875d5456bc906fc4fe38005459c6bc0c9db9dbb5fe35936ef",
+      "header": {
+        "VERSION": [
+          "0.7"
+        ],
+        "FIELDS": [
+          "x",
+          "y",
+          "z",
+          "intensity"
+        ],
+        "SIZE": [
+          "4",
+          "4",
+          "4",
+          "4"
+        ],
+        "TYPE": [
+          "F",
+          "F",
+          "F",
+          "F"
+        ],
+        "COUNT": [
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "WIDTH": [
+          "115816"
+        ],
+        "HEIGHT": [
+          "1"
+        ],
+        "VIEWPOINT": [
+          "0",
+          "0",
+          "0",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "POINTS": [
+          "115816"
+        ],
+        "DATA": [
+          "binary_compressed"
+        ]
+      },
+      "finite_xyz_points": 115816,
+      "xyz_min": [
+        -14.232912063598633,
+        -35.69328689575195,
+        -3.3651788234710693
+      ],
+      "xyz_max": [
+        19.91459083557129,
+        12.093025207519531,
+        5.833889484405518
+      ],
+      "xyz_mean": [
+        4.295956611633301,
+        -8.891209602355957,
+        2.2575180530548096
+      ],
+      "xyz_percentile_1_50_99": [
+        [
+          -9.541638469696045,
+          -27.219151115417482,
+          -0.8222020328044891
+        ],
+        [
+          4.425223112106323,
+          -8.420549392700195,
+          2.3320236206054688
+        ],
+        [
+          16.42401714324951,
+          3.322325968742372,
+          5.140006875991822
+        ]
+      ],
+      "npy": "GlobalMap_loc.npy",
+      "binary_pcd": "GlobalMap_loc_binary.pcd",
+      "columns": [
+        "x",
+        "y",
+        "z",
+        "intensity"
+      ]
+    },
+    {
+      "name": "GlobalMap_mid.pcd",
+      "source": "/mnt/e/zhongchuandingwei/zhongchuanbag-20260930T031102Z-1-001/zhongchuanbag/GlobalMap_mid.pcd",
+      "sha256": "779127ea20df4889450c5f2548b5385b24afd056df5565e268bd2a7b688a5909",
+      "header": {
+        "VERSION": [
+          "0.7"
+        ],
+        "FIELDS": [
+          "x",
+          "y",
+          "z"
+        ],
+        "SIZE": [
+          "4",
+          "4",
+          "4"
+        ],
+        "TYPE": [
+          "F",
+          "F",
+          "F"
+        ],
+        "COUNT": [
+          "1",
+          "1",
+          "1"
+        ],
+        "WIDTH": [
+          "45550"
+        ],
+        "HEIGHT": [
+          "1"
+        ],
+        "VIEWPOINT": [
+          "0",
+          "0",
+          "0",
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "POINTS": [
+          "45550"
+        ],
+        "DATA": [
+          "binary"
+        ]
+      },
+      "finite_xyz_points": 45550,
+      "xyz_min": [
+        -14.232912063598633,
+        -35.69328689575195,
+        -3.3651788234710693
+      ],
+      "xyz_max": [
+        19.91459083557129,
+        12.093025207519531,
+        5.833889484405518
+      ],
+      "xyz_mean": [
+        4.471231937408447,
+        -9.365278244018555,
+        2.1456995010375977
+      ],
+      "xyz_percentile_1_50_99": [
+        [
+          -9.945803594589233,
+          -28.56817768096924,
+          -0.9860878425836563
+        ],
+        [
+          4.681957721710205,
+          -9.074664115905762,
+          2.128875494003296
+        ],
+        [
+          16.554515132904054,
+          3.5113842415809646,
+          5.164260425567628
+        ]
+      ],
+      "npy": "GlobalMap_mid.npy",
+      "binary_pcd": "GlobalMap_mid_binary.pcd",
+      "columns": [
+        "x",
+        "y",
+        "z"
+      ]
+    }
+  ],
+  "scan_samples": [
+    {
+      "index": 0,
+      "received_ns": 1790736411214742282,
+      "stamp_ns": 1790736409520505428,
+      "frame_id": "body",
+      "height": 1,
+      "width": 5724,
+      "fields": [
+        {
+          "name": "x",
+          "offset": 0,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "y",
+          "offset": 4,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "z",
+          "offset": 8,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "intensity",
+          "offset": 32,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_x",
+          "offset": 16,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_y",
+          "offset": 20,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_z",
+          "offset": 24,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "curvature",
+          "offset": 36,
+          "datatype": 7,
+          "count": 1
+        }
+      ],
+      "is_bigendian": false,
+      "point_step": 48,
+      "row_step": 274752,
+      "is_dense": true,
+      "point_count": 5724,
+      "columns": [
+        "x",
+        "y",
+        "z",
+        "intensity"
+      ],
+      "finite_xyz_points": 5724,
+      "npy": "scan_0000_1790736409520505428.npy",
+      "pcd": "scan_0000_1790736409520505428.pcd"
+    },
+    {
+      "index": 107,
+      "received_ns": 1790736421908987738,
+      "stamp_ns": 1790736420220205545,
+      "frame_id": "body",
+      "height": 1,
+      "width": 5753,
+      "fields": [
+        {
+          "name": "x",
+          "offset": 0,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "y",
+          "offset": 4,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "z",
+          "offset": 8,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "intensity",
+          "offset": 32,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_x",
+          "offset": 16,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_y",
+          "offset": 20,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_z",
+          "offset": 24,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "curvature",
+          "offset": 36,
+          "datatype": 7,
+          "count": 1
+        }
+      ],
+      "is_bigendian": false,
+      "point_step": 48,
+      "row_step": 276144,
+      "is_dense": true,
+      "point_count": 5753,
+      "columns": [
+        "x",
+        "y",
+        "z",
+        "intensity"
+      ],
+      "finite_xyz_points": 5753,
+      "npy": "scan_0107_1790736420220205545.npy",
+      "pcd": "scan_0107_1790736420220205545.pcd"
+    },
+    {
+      "index": 215,
+      "received_ns": 1790736432508699784,
+      "stamp_ns": 1790736431020724296,
+      "frame_id": "body",
+      "height": 1,
+      "width": 5674,
+      "fields": [
+        {
+          "name": "x",
+          "offset": 0,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "y",
+          "offset": 4,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "z",
+          "offset": 8,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "intensity",
+          "offset": 32,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_x",
+          "offset": 16,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_y",
+          "offset": 20,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_z",
+          "offset": 24,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "curvature",
+          "offset": 36,
+          "datatype": 7,
+          "count": 1
+        }
+      ],
+      "is_bigendian": false,
+      "point_step": 48,
+      "row_step": 272352,
+      "is_dense": true,
+      "point_count": 5674,
+      "columns": [
+        "x",
+        "y",
+        "z",
+        "intensity"
+      ],
+      "finite_xyz_points": 5674,
+      "npy": "scan_0215_1790736431020724296.npy",
+      "pcd": "scan_0215_1790736431020724296.pcd"
+    },
+    {
+      "index": 322,
+      "received_ns": 1790736443149829803,
+      "stamp_ns": 1790736441720766782,
+      "frame_id": "body",
+      "height": 1,
+      "width": 5758,
+      "fields": [
+        {
+          "name": "x",
+          "offset": 0,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "y",
+          "offset": 4,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "z",
+          "offset": 8,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "intensity",
+          "offset": 32,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_x",
+          "offset": 16,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_y",
+          "offset": 20,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_z",
+          "offset": 24,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "curvature",
+          "offset": 36,
+          "datatype": 7,
+          "count": 1
+        }
+      ],
+      "is_bigendian": false,
+      "point_step": 48,
+      "row_step": 276384,
+      "is_dense": true,
+      "point_count": 5758,
+      "columns": [
+        "x",
+        "y",
+        "z",
+        "intensity"
+      ],
+      "finite_xyz_points": 5758,
+      "npy": "scan_0322_1790736441720766782.npy",
+      "pcd": "scan_0322_1790736441720766782.pcd"
+    },
+    {
+      "index": 430,
+      "received_ns": 1790736453906309376,
+      "stamp_ns": 1790736452520768642,
+      "frame_id": "body",
+      "height": 1,
+      "width": 5828,
+      "fields": [
+        {
+          "name": "x",
+          "offset": 0,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "y",
+          "offset": 4,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "z",
+          "offset": 8,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "intensity",
+          "offset": 32,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_x",
+          "offset": 16,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_y",
+          "offset": 20,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_z",
+          "offset": 24,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "curvature",
+          "offset": 36,
+          "datatype": 7,
+          "count": 1
+        }
+      ],
+      "is_bigendian": false,
+      "point_step": 48,
+      "row_step": 279744,
+      "is_dense": true,
+      "point_count": 5828,
+      "columns": [
+        "x",
+        "y",
+        "z",
+        "intensity"
+      ],
+      "finite_xyz_points": 5828,
+      "npy": "scan_0430_1790736452520768642.npy",
+      "pcd": "scan_0430_1790736452520768642.pcd"
+    },
+    {
+      "index": 537,
+      "received_ns": 1790736464750336336,
+      "stamp_ns": 1790736463221764326,
+      "frame_id": "body",
+      "height": 1,
+      "width": 5745,
+      "fields": [
+        {
+          "name": "x",
+          "offset": 0,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "y",
+          "offset": 4,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "z",
+          "offset": 8,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "intensity",
+          "offset": 32,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_x",
+          "offset": 16,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_y",
+          "offset": 20,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_z",
+          "offset": 24,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "curvature",
+          "offset": 36,
+          "datatype": 7,
+          "count": 1
+        }
+      ],
+      "is_bigendian": false,
+      "point_step": 48,
+      "row_step": 275760,
+      "is_dense": true,
+      "point_count": 5745,
+      "columns": [
+        "x",
+        "y",
+        "z",
+        "intensity"
+      ],
+      "finite_xyz_points": 5745,
+      "npy": "scan_0537_1790736463221764326.npy",
+      "pcd": "scan_0537_1790736463221764326.pcd"
+    },
+    {
+      "index": 645,
+      "received_ns": 1790736475456631170,
+      "stamp_ns": 1790736474020746231,
+      "frame_id": "body",
+      "height": 1,
+      "width": 5773,
+      "fields": [
+        {
+          "name": "x",
+          "offset": 0,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "y",
+          "offset": 4,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "z",
+          "offset": 8,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "intensity",
+          "offset": 32,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_x",
+          "offset": 16,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_y",
+          "offset": 20,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_z",
+          "offset": 24,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "curvature",
+          "offset": 36,
+          "datatype": 7,
+          "count": 1
+        }
+      ],
+      "is_bigendian": false,
+      "point_step": 48,
+      "row_step": 277104,
+      "is_dense": true,
+      "point_count": 5773,
+      "columns": [
+        "x",
+        "y",
+        "z",
+        "intensity"
+      ],
+      "finite_xyz_points": 5773,
+      "npy": "scan_0645_1790736474020746231.npy",
+      "pcd": "scan_0645_1790736474020746231.pcd"
+    },
+    {
+      "index": 752,
+      "received_ns": 1790736486101145343,
+      "stamp_ns": 1790736484720775842,
+      "frame_id": "body",
+      "height": 1,
+      "width": 5710,
+      "fields": [
+        {
+          "name": "x",
+          "offset": 0,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "y",
+          "offset": 4,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "z",
+          "offset": 8,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "intensity",
+          "offset": 32,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_x",
+          "offset": 16,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_y",
+          "offset": 20,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_z",
+          "offset": 24,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "curvature",
+          "offset": 36,
+          "datatype": 7,
+          "count": 1
+        }
+      ],
+      "is_bigendian": false,
+      "point_step": 48,
+      "row_step": 274080,
+      "is_dense": true,
+      "point_count": 5710,
+      "columns": [
+        "x",
+        "y",
+        "z",
+        "intensity"
+      ],
+      "finite_xyz_points": 5710,
+      "npy": "scan_0752_1790736484720775842.npy",
+      "pcd": "scan_0752_1790736484720775842.pcd"
+    },
+    {
+      "index": 860,
+      "received_ns": 1790736496914515592,
+      "stamp_ns": 1790736495519168376,
+      "frame_id": "body",
+      "height": 1,
+      "width": 5542,
+      "fields": [
+        {
+          "name": "x",
+          "offset": 0,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "y",
+          "offset": 4,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "z",
+          "offset": 8,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "intensity",
+          "offset": 32,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_x",
+          "offset": 16,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_y",
+          "offset": 20,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_z",
+          "offset": 24,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "curvature",
+          "offset": 36,
+          "datatype": 7,
+          "count": 1
+        }
+      ],
+      "is_bigendian": false,
+      "point_step": 48,
+      "row_step": 266016,
+      "is_dense": true,
+      "point_count": 5542,
+      "columns": [
+        "x",
+        "y",
+        "z",
+        "intensity"
+      ],
+      "finite_xyz_points": 5542,
+      "npy": "scan_0860_1790736495519168376.npy",
+      "pcd": "scan_0860_1790736495519168376.pcd"
+    },
+    {
+      "index": 968,
+      "received_ns": 1790736507649366389,
+      "stamp_ns": 1790736506321407794,
+      "frame_id": "body",
+      "height": 1,
+      "width": 5615,
+      "fields": [
+        {
+          "name": "x",
+          "offset": 0,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "y",
+          "offset": 4,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "z",
+          "offset": 8,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "intensity",
+          "offset": 32,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_x",
+          "offset": 16,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_y",
+          "offset": 20,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "normal_z",
+          "offset": 24,
+          "datatype": 7,
+          "count": 1
+        },
+        {
+          "name": "curvature",
+          "offset": 36,
+          "datatype": 7,
+          "count": 1
+        }
+      ],
+      "is_bigendian": false,
+      "point_step": 48,
+      "row_step": 269520,
+      "is_dense": true,
+      "point_count": 5615,
+      "columns": [
+        "x",
+        "y",
+        "z",
+        "intensity"
+      ],
+      "finite_xyz_points": 5615,
+      "npy": "scan_0968_1790736506321407794.npy",
+      "pcd": "scan_0968_1790736506321407794.pcd"
+    }
+  ],
+  "map_localization_verified": false,
+  "initial_pose_candidates": [
+    {
+      "scan_index": 0,
+      "scan_stamp_ns": 1790736409520505428,
+      "camera_init_T_body": [
+        [
+          0.8560452772177021,
+          0.510804691359611,
+          -0.07915207286116019,
+          1.7217117342930783
+        ],
+        [
+          -0.5146141339221192,
+          0.8278192904351749,
+          -0.22335513325401105,
+          -1.7460821711700982
+        ],
+        [
+          -0.04856723711302836,
+          0.23193488238801493,
+          0.9715181078141839,
+          0.8392178544456809
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "body_tf_time_difference_s": 0.0,
+      "map_correspondence_verified": false,
+      "map_T_body": [
+        [
+          0.9277654761698607,
+          -0.11791507610814637,
+          0.3540441442160115,
+          3.531179564795979
+        ],
+        [
+          0.10339300787729322,
+          0.9928455241099138,
+          0.05972981815578185,
+          -2.3995912378831092
+        ],
+        [
+          -0.3585541899759864,
+          -0.018809574191000544,
+          0.9333193948319176,
+          0.44385748813269343
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "map_tf_time_difference_s": 1.130623343
+    },
+    {
+      "scan_index": 107,
+      "scan_stamp_ns": 1790736420220205545,
+      "camera_init_T_body": [
+        [
+          0.8549816305715453,
+          0.5127387387115001,
+          -0.07813704121412203,
+          1.7318255747148998
+        ],
+        [
+          -0.5161700848295265,
+          0.826429629008334,
+          -0.2249055620124808,
+          -1.7424684766611072
+        ],
+        [
+          -0.050743028213113286,
+          0.2326221273258639,
+          0.9712425500183464,
+          0.8381556709917616
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "body_tf_time_difference_s": 0.0,
+      "map_correspondence_verified": false,
+      "map_T_body": [
+        [
+          0.9286799608007241,
+          -0.11768606230056688,
+          0.35171511361793384,
+          3.5323516698674644
+        ],
+        [
+          0.1032820562754276,
+          0.992870196636705,
+          0.05951125508703109,
+          -2.3883036036212792
+        ],
+        [
+          -0.35621109929172734,
+          -0.018941049883818284,
+          0.934213513802213,
+          0.4468497061742369
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "map_tf_time_difference_s": -0.019383528
+    },
+    {
+      "scan_index": 215,
+      "scan_stamp_ns": 1790736431020724296,
+      "camera_init_T_body": [
+        [
+          0.8552459271641825,
+          0.5122705636139807,
+          -0.07831522025523782,
+          1.7277935909377204
+        ],
+        [
+          -0.5157843505894016,
+          0.8268043629071606,
+          -0.22441267603385132,
+          -1.7437547725007903
+        ],
+        [
+          -0.050208642244946165,
+          0.23232179220258206,
+          0.9713422039176957,
+          0.8404833628323639
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "body_tf_time_difference_s": -0.099079609,
+      "map_correspondence_verified": false,
+      "map_T_body": [
+        [
+          0.9294077394763475,
+          -0.1168735108676753,
+          0.35005976098210756,
+          3.5290964614136566
+        ],
+        [
+          0.10225860088019438,
+          0.9929457590861187,
+          0.06001581507267817,
+          -2.3937513919106013
+        ],
+        [
+          -0.35460461410904515,
+          -0.019982541637040857,
+          0.9348027950762121,
+          0.4463521621973437
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "map_tf_time_difference_s": 0.130324372
+    },
+    {
+      "scan_index": 322,
+      "scan_stamp_ns": 1790736441720766782,
+      "camera_init_T_body": [
+        [
+          0.8686375817598798,
+          0.49001263080476637,
+          -0.07318724756456968,
+          -0.35080332032397055
+        ],
+        [
+          -0.49362069993260643,
+          0.8432640604111871,
+          -0.21270714378414124,
+          -0.22840575686323641
+        ],
+        [
+          -0.04251301156504436,
+          0.2208921593686733,
+          0.9743712320143195,
+          -0.18839463878450666
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "body_tf_time_difference_s": 0.099915982,
+      "map_correspondence_verified": false,
+      "map_T_body": [
+        [
+          0.9250039015980382,
+          -0.15606736565541873,
+          0.34642569103014076,
+          0.7988236895665534
+        ],
+        [
+          0.13816586749051823,
+          0.9874925965002669,
+          0.07595106923328535,
+          -2.783431818323491
+        ],
+        [
+          -0.35394628842373405,
+          -0.022390829249147814,
+          0.9349976875247328,
+          0.2709974206724861
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "map_tf_time_difference_s": 0.180448136
+    },
+    {
+      "scan_index": 430,
+      "scan_stamp_ns": 1790736452520768642,
+      "camera_init_T_body": [
+        [
+          0.8768154954107875,
+          0.47609933469570404,
+          -0.06726076501039635,
+          -1.7364787177868077
+        ],
+        [
+          -0.47908868748085726,
+          0.853171652919633,
+          -0.2063302212042135,
+          0.7041573464157022
+        ],
+        [
+          -0.040848702982410744,
+          0.21313740675118062,
+          0.9761679308951022,
+          -0.8637110882886644
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "body_tf_time_difference_s": -0.499370575,
+      "map_correspondence_verified": false,
+      "map_T_body": [
+        [
+          0.9239453174397506,
+          -0.16457326791750979,
+          0.3453124525238549,
+          -0.9520219410745402
+        ],
+        [
+          0.1463445896158675,
+          0.986121511853167,
+          0.07840679148209351,
+          -3.0709059128640734
+        ],
+        [
+          -0.3534236996457121,
+          -0.021908978691501185,
+          0.9352067606585361,
+          0.11750973827447081
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "map_tf_time_difference_s": 0.430344814
+    },
+    {
+      "scan_index": 537,
+      "scan_stamp_ns": 1790736463221764326,
+      "camera_init_T_body": [
+        [
+          0.8598780077284585,
+          0.5049779651777949,
+          -0.07488034795432615,
+          1.2935413111524139
+        ],
+        [
+          -0.5081363904251933,
+          0.8325427724500567,
+          -0.22061264870071462,
+          -1.4277196378774184
+        ],
+        [
+          -0.04906343394548188,
+          0.22774939456776433,
+          0.9724829009928557,
+          0.623625672791619
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "body_tf_time_difference_s": 0.0,
+      "map_correspondence_verified": false,
+      "map_T_body": [
+        [
+          0.9276743011647491,
+          -0.13182790192513982,
+          0.349344808509339,
+          2.9795611522233396
+        ],
+        [
+          0.11644023275904268,
+          0.9910822688789289,
+          0.06478895360114015,
+          -2.4657118391251767
+        ],
+        [
+          -0.35477043725970814,
+          -0.019425256439140476,
+          0.9347516227634103,
+          0.4055718700621357
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "map_tf_time_difference_s": -0.120772959
+    },
+    {
+      "scan_index": 645,
+      "scan_stamp_ns": 1790736474020746231,
+      "camera_init_T_body": [
+        [
+          0.6746212799133064,
+          0.7190585877198095,
+          -0.1668558543005328,
+          -0.5932483206409535
+        ],
+        [
+          -0.7274939500637456,
+          0.6093668571353005,
+          -0.315316644098432,
+          -0.0701964792427478
+        ],
+        [
+          -0.12505471326030088,
+          0.33410594255601295,
+          0.9342026214050723,
+          -0.29982915342751965
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "body_tf_time_difference_s": -0.099870205,
+      "map_correspondence_verified": false,
+      "map_T_body": [
+        [
+          0.9223908700372588,
+          0.18466863531994157,
+          0.33925297051136055,
+          0.5023340429093828
+        ],
+        [
+          -0.17221472672098143,
+          0.9827958341005584,
+          -0.06674156407223358,
+          -2.8415960938402813
+        ],
+        [
+          -0.3457414796812234,
+          0.0031374517463451657,
+          0.9383245630507476,
+          0.2526107164050242
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "map_tf_time_difference_s": 0.430272044
+    },
+    {
+      "scan_index": 752,
+      "scan_stamp_ns": 1790736484720775842,
+      "camera_init_T_body": [
+        [
+          0.9971378167662022,
+          -0.07551652345968446,
+          -0.003664568090963286,
+          0.44472432461060385
+        ],
+        [
+          0.07560469501583703,
+          0.9957495272211465,
+          0.052600467017159765,
+          -2.003160572381797
+        ],
+        [
+          -0.0003232124574463198,
+          -0.05272697339525539,
+          0.9986089133440992,
+          0.2498451007519738
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "body_tf_time_difference_s": -0.199910164,
+      "map_correspondence_verified": false,
+      "map_T_body": [
+        [
+          0.6577182194337977,
+          -0.717875577258805,
+          0.22816967239352948,
+          2.666800975244344
+        ],
+        [
+          0.6467770763592152,
+          0.693474840484426,
+          0.317446151514432,
+          -3.523066761891913
+        ],
+        [
+          -0.3861167664334967,
+          -0.06121520391565692,
+          0.9204165043546888,
+          0.3952117481638609
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "map_tf_time_difference_s": -2.269929263
+    },
+    {
+      "scan_index": 860,
+      "scan_stamp_ns": 1790736495519168376,
+      "camera_init_T_body": [
+        [
+          0.746743005142058,
+          0.6514752695628242,
+          -0.13399573657145047,
+          -0.4697043908747134
+        ],
+        [
+          -0.6582740614347643,
+          0.6950956967520119,
+          -0.288993481585417,
+          -1.9872759586952686
+        ],
+        [
+          -0.09513224644388521,
+          0.30400977863339557,
+          0.9479071210734664,
+          -0.1821819301238247
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "body_tf_time_difference_s": 0.101963997,
+      "map_correspondence_verified": false,
+      "map_T_body": [
+        [
+          0.9358126485397632,
+          0.06597664854554361,
+          0.34626834778757626,
+          1.9204921096517005
+        ],
+        [
+          -0.06235870414701096,
+          0.9978202041252155,
+          -0.021592412011267992,
+          -4.15702057320971
+        ],
+        [
+          -0.346938148450082,
+          -0.0013863931825291442,
+          0.9378869862963082,
+          0.3403530675544246
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "map_tf_time_difference_s": 0.733071977
+    },
+    {
+      "scan_index": 968,
+      "scan_stamp_ns": 1790736506321407794,
+      "camera_init_T_body": [
+        [
+          0.746347645353726,
+          0.6518520913852521,
+          -0.13436533493239128,
+          -0.46125983033674267
+        ],
+        [
+          -0.6587393096183694,
+          0.6946719594359224,
+          -0.2889522291604896,
+          -1.9874128081166245
+        ],
+        [
+          -0.09501428439100547,
+          0.3041705438236499,
+          0.9478673778707989,
+          -0.17880589078621056
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "body_tf_time_difference_s": -10.400442838,
+      "map_correspondence_verified": false,
+      "map_T_body": [
+        [
+          0.9339018013175501,
+          0.07372558400399451,
+          0.34984562846911726,
+          1.909138758053459
+        ],
+        [
+          -0.06985487386304283,
+          0.997275876482616,
+          -0.02368803037938305,
+          -4.1537506680836875
+        ],
+        [
+          -0.35063901963883826,
+          -0.0023161280072722668,
+          0.9365078288288718,
+          0.38320327267188636
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "map_tf_time_difference_s": -1.570473793
+    }
+  ],
+  "notes": [
+    "Point clouds are available in the new recording; old no-pointcloud conclusion applies only to the 20260929 recordings.",
+    "No calibration/configuration file accompanies GlobalMap_loc.pcd or GlobalMap_mid.pcd.",
+    "Recorded TF provides pose hypotheses, not truth; neither PCD embeds ROS frame identity.",
+    "body is connected to camera_init by recorded dynamic TF. No verified rigid body-to-base_link or livox_frame-to-body calibration was provided."
+  ]
+}

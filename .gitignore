@@ -1,0 +1,17 @@
+build/
+install/
+log/
+.cache/
+__pycache__/
+*.pyc
+.pytest_cache/
+results/
+artifacts/
+reports/new_bag_assets/
+reports/*_recorded_wheel_odom.csv
+reports/bag_audit.json
+reports/bag_audit.md
+*.db3
+*.pcd
+*.pgm
+*.zip

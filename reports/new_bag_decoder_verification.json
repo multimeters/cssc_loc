@@ -1,0 +1,9 @@
+{
+  "decoder": "rclpy.serialization.deserialize_message + sensor_msgs.msg.PointCloud2",
+  "sample_indices": [
+    0,
+    484,
+    968
+  ],
+  "passed": true
+}

@@ -1,0 +1,15 @@
+/**:
+  ros__parameters:
+    use_sim_time: true
+    wheel_topic: /hunter_odom
+    imu_topic: /livox/imu
+    wheel_frame: hunter_base_link
+    wheel_axes_confirmed: false
+    experimental_frame_assumptions: false
+    local_frame: localization_odom
+    localized_child_frame: localized_base_link
+    sensor_timeout: 0.2
+    future_tolerance: 0.1
+    wheel_variance_floor: 0.0025
+    angular_variance_floor: 0.0004
+    publish_tf: true

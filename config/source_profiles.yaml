@@ -1,0 +1,9 @@
+profiles:
+  dead_reckoning:
+    - autoware_gyro_odometer
+    - autoware_ekf_localizer
+    - autoware_stop_filter
+    - autoware_twist2accel
+  ndt:
+    - autoware_ndt_scan_matcher
+    - autoware_map_loader
