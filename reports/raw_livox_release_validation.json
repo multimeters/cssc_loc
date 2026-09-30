@@ -1,0 +1,211 @@
+{
+  "dataset": "hunter_sensors_20260930_104649",
+  "pointcloud_input_topic": "/livox/lidar",
+  "pointcloud_input_type": "livox_ros_driver2/msg/CustomMsg",
+  "recorded_processed_pointcloud_used": false,
+  "recorded_localization_tf_used": false,
+  "runtime_config": "config/localization.yaml",
+  "config_sha256": "bab6c1bc0e2e16b06afac6b9e24c2d9c752314ec4bd731215feecd54adf23e36",
+  "build": {
+    "packages": 34,
+    "result": "passed",
+    "entry": "Windows start.cmd"
+  },
+  "tests": {
+    "passed": 55,
+    "failed": 0,
+    "skipped": 0,
+    "paths": [
+      "src/aps_bag_localization/test",
+      "src/aps_ndt_localization/test"
+    ]
+  },
+  "dependency_check": "rosdep check: passed without skip keys",
+  "source_lock_check": {
+    "vendor_packages": 31,
+    "mismatches": []
+  },
+  "commands": [
+    "start.cmd --output E:\\zhongchuandingwei\\aps-localization\\artifacts\\fusion\\raw-livox-full-01",
+    "start.cmd --no-build --output E:\\zhongchuandingwei\\aps-localization\\artifacts\\fusion\\raw-livox-full-02"
+  ],
+  "verification_run": "artifacts/fusion/raw-livox-full-02",
+  "status": "completed",
+  "full_bag_completed": true,
+  "estimator_checks_passed": true,
+  "input_counts": {
+    "/hunter_odom": 4807,
+    "/livox/lidar": 967,
+    "/livox/imu": 2304
+  },
+  "preprocessing": {
+    "node": "aps_raw_livox",
+    "raw_topic": "/livox/lidar",
+    "output_topic": "/localization/pointcloud/deskewed",
+    "output_frame": "body",
+    "reference": "scan_end",
+    "fallback_policy": "whole_scan_uncorrected_with_nominal_end_header",
+    "counts": {
+      "cloud_received": 967,
+      "cloud_published": 967,
+      "fully_deskewed": 48,
+      "uncompensated": 919,
+      "cloud_rejected": 0,
+      "imu_received": 2304,
+      "wheel_received": 4807,
+      "motion_rejected": 0,
+      "points_input": 19339200,
+      "points_rejected": 3367821,
+      "points_published": 15971379
+    },
+    "pending": 0,
+    "fallback_reasons": {
+      "imu: no bracketing samples": 57,
+      "imu: gap exceeds configured limit": 859,
+      "wheel: no bracketing samples": 2,
+      "wheel: gap exceeds configured limit": 1
+    },
+    "last_scan": {
+      "start_ns": 1790736507520231734,
+      "end_ns": 1790736507621324531,
+      "mode": "uncompensated",
+      "fallback_reason": "imu: no bracketing samples",
+      "output_points": 16904
+    },
+    "last_rejection": ""
+  },
+  "adapter_counts": {
+    "cloud_dropped": 0,
+    "cloud_forwarded": 967,
+    "cloud_received": 967,
+    "ekf": 3807,
+    "gyro": 1747,
+    "imu": 2304,
+    "ndt": 967,
+    "output": 3661,
+    "rejected": 0,
+    "wheel": 4807
+  },
+  "ndt": {
+    "count": 967,
+    "span_s": 96.600659687,
+    "first_ns": 1790736411020664844,
+    "last_ns": 1790736507621324531,
+    "max_gap_s": 0.107044777,
+    "non_increasing_stamps": 0,
+    "max_step_m": 0.11072029316344902,
+    "path_length_m": 29.118525939817378,
+    "invalid_poses": 0,
+    "invalid_xy_yaw_variances": 0,
+    "frames": [
+      [
+        "map",
+        "base_link"
+      ]
+    ],
+    "first_xyz": [
+      3.1762847900390625,
+      -2.488952159881592,
+      0.09575512260198593
+    ],
+    "last_xyz": [
+      2.7539544105529785,
+      -3.616745948791504,
+      0.08861503005027771
+    ]
+  },
+  "ekf": {
+    "count": 3661,
+    "span_s": 97.243306954,
+    "first_ns": 1790736410981241538,
+    "last_ns": 1790736508224548492,
+    "max_gap_s": 0.087072072,
+    "non_increasing_stamps": 0,
+    "max_step_m": 0.1222834654848978,
+    "path_length_m": 28.294228714495258,
+    "invalid_poses": 0,
+    "invalid_xy_yaw_variances": 0,
+    "frames": [
+      [
+        "map",
+        "base_link"
+      ]
+    ],
+    "first_xyz": [
+      3.1712255386312678,
+      -2.4409493899131123,
+      0.07005207431282129
+    ],
+    "last_xyz": [
+      2.754612108956976,
+      -3.6174833086221243,
+      0.08855599220261681
+    ]
+  },
+  "gyro_messages": 1747,
+  "native_ekf_update_evidence": {
+    "pose": {
+      "diagnostic_samples": 3807,
+      "cycles_with_queued_measurements": 3005,
+      "native_reported_update_cycles": 3005,
+      "successful_cycle_span_s": 96.864139568,
+      "max_successful_cycle_gap_s": 0.320250173,
+      "note": "Native update path, with repeated smoothing cycles; not unique message count."
+    },
+    "twist": {
+      "diagnostic_samples": 3807,
+      "cycles_with_queued_measurements": 1780,
+      "native_reported_update_cycles": 1780,
+      "successful_cycle_span_s": 95.39346379,
+      "max_successful_cycle_gap_s": 0.828979904,
+      "note": "Native update path, with repeated smoothing cycles; not unique message count."
+    }
+  },
+  "ndt_accepted_to_published_ratio": 1.0,
+  "geometry_report": "reports/raw_livox_fusion_validation/validation.json",
+  "geometry": {
+    "ekf": {
+      "weighting": "one weight per evaluated scan point; voxel selection applied independently per scan",
+      "nearest_neighbor_distance_m": {
+        "count": 102466,
+        "min": 0.0020778249374056434,
+        "max": 34.59255111909174,
+        "mean": 0.1326090152987786,
+        "median": 0.06645342874275609,
+        "p90": 0.10427631753310362,
+        "p95": 0.1586422006457948
+      },
+      "all_point_rmse_m": 0.8569022465284882,
+      "overlap_within_0.2m": 0.9608065114281811,
+      "inlier_rmse_within_0.2m": 0.07189221095014109,
+      "overlap_within_0.5m": 0.9863564499443718,
+      "inlier_rmse_within_0.5m": 0.08693279231943817
+    },
+    "ndt": {
+      "weighting": "one weight per evaluated scan point; voxel selection applied independently per scan",
+      "nearest_neighbor_distance_m": {
+        "count": 102466,
+        "min": 0.0006308946857714568,
+        "max": 34.549649378977676,
+        "mean": 0.1324538949056937,
+        "median": 0.06623407670221652,
+        "p90": 0.10489068527676633,
+        "p95": 0.15776306010525237
+      },
+      "all_point_rmse_m": 0.8563825484600975,
+      "overlap_within_0.2m": 0.9605332500536763,
+      "inlier_rmse_within_0.2m": 0.07175892661391581,
+      "overlap_within_0.5m": 0.986346690609568,
+      "inlier_rmse_within_0.5m": 0.08693077384061797
+    }
+  },
+  "accuracy_verified": false,
+  "extrinsic_calibration_verified": false,
+  "deskew_policy": "Full 3-D rotation + forward wheel speed only when all motion brackets and configured gaps are valid; otherwise whole scan uncorrected and explicitly reported.",
+  "timing": "Original raw headers unchanged; derived PointCloud2 uses scan-end reference, which remains only nominal for uncorrected scans. No old TF or processed bag cloud consumed.",
+  "relay_adjustment": {
+    "old_seconds": 0.02,
+    "current_seconds": 0.08,
+    "reason": "Native NDT subscription keeps only one queued scan. The first raw run relayed 967 but native processed 962 without rejection diagnostics; increased wall-time spacing before rerunning."
+  }
+}

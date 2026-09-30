@@ -274,7 +274,8 @@ def largest_step(data):
             "interpretation":"Largest consecutive output displacement; not independently verified vehicle motion."}
 
 
-def inspect_ndt_step(streams,gyro,metrics,audit,tree,base_T_body,spacing,max_difference):
+def inspect_ndt_step(streams,gyro,metrics,audit,tree,base_T_body,spacing,max_difference,
+                     current_samples=None,current_assets=None):
     result={"largest_steps":{name:largest_step(data) for name,data in streams.items()},"geometry_checks":[]}
     ndt_step=result["largest_steps"]["ndt"]
     if not ndt_step:
@@ -286,7 +287,35 @@ def inspect_ndt_step(streams,gyro,metrics,audit,tree,base_T_body,spacing,max_dif
     result["metrics_at_step"]=[row for row in metrics if stamp_ns(row) in stamps]
     typical_vx=np.median([abs(float(row["vx"])) for row in nearby]) if nearby else None
     result["rough_wheel_speed_times_step_dt_m"]=float(typical_vx*ndt_step["dt_s"]) if typical_vx is not None else None
-    result["warning"]="A large NDT pose step despite nearby wheel speed and high matching scores is a registration fluctuation. Matching scores or convergence alone do not establish pose accuracy."
+    result["warning"]="An NDT output step can differ from wheel-speed integration. Without an independent reference its cause is unverified; matching scores or convergence alone do not establish pose accuracy."
+    if current_samples is not None:
+        # Raw Livox runs must never substitute historical processed bag clouds.
+        by_stamp={sample["stamp_ns"]:sample for sample in current_samples}
+        missing=[stamp for stamp in stamps if stamp not in by_stamp]
+        if missing:
+            result["geometry_unavailable_reason"]=(
+                "The exact raw-Livox-derived scans at the largest NDT step were not "
+                "saved in this run. Only output-step statistics are available; "
+                "historical /cloud_registered_body scans are not used.")
+            result["missing_sample_stamps_ns"]=missing
+            return result
+        for stamp in stamps:
+            sample=by_stamp[stamp]
+            item={"stamp_ns":stamp,"scan_frame":sample["frame_id"],"outputs":{}}
+            for name,data in streams.items():
+                evaluated=geometry([sample],current_assets,data,base_T_body,tree,max_difference,spacing)
+                value=evaluated["samples"][0]
+                if not value["evaluated"]:
+                    item["outputs"][name]={"error":value["reason"]}
+                    continue
+                item["scan_points"]=value["evaluated_scan_points"]
+                item["outputs"][name]={
+                    "pose_minus_scan_s":value["pose_minus_scan_time_s"],
+                    "distance_median_m":value["nearest_neighbor_distance_m"]["median"],
+                    "overlap_within_0.2m":value["overlap_within_0.2m"],
+                    "overlap_within_0.5m":value["overlap_within_0.5m"]}
+            result["geometry_checks"].append(item)
+        return result
     db=Path(audit["bag"]["database"])
     if not db.exists():
         result["geometry_unavailable_reason"]="Source database unavailable for the two specific step scans"
@@ -411,12 +440,34 @@ def main():
     args=parser.parse_args()
     if args.max_time_difference<0 or args.voxel_size<0:
         parser.error("Time tolerance and voxel size must be nonnegative")
-    audit=json.loads(args.audit.read_text(encoding="utf8"))
-    assets=args.audit.parent/"new_bag_assets"
     run_status=recorded_run_status(args.results)
     if not run_status["summary_exists"]:
         parser.error("No results/summary.json; wait for the replay to finish before evaluating")
     run_summary=run_status["summary"]
+    raw_livox=run_summary.get("pointcloud_input_type")=="livox_ros_driver2/msg/CustomMsg"
+    audit=None
+    if raw_livox:
+        manifest_path=args.results/"scan_samples.json"
+        if not manifest_path.is_file():
+            parser.error("Raw Livox run requires its own scan_samples.json; historical processed scans are not a fallback")
+        manifest=json.loads(manifest_path.read_text(encoding="utf8"))
+        samples=manifest.get("scan_samples",[])
+        assets=args.results/"scan_samples"
+        if not manifest.get("source_topic") or not manifest.get("raw_source_topic"):
+            parser.error("Raw Livox sample manifest must identify its processed and raw source topics")
+        if manifest["raw_source_topic"]!=run_summary.get("pointcloud_input_topic",manifest["raw_source_topic"]):
+            parser.error("Sample manifest raw source topic differs from this run")
+        for sample in samples:
+            sample_path=(assets/sample["npy"]).resolve()
+            if not sample_path.is_relative_to(assets.resolve()) or not sample_path.is_file():
+                parser.error("Raw Livox sample path is missing or outside this run's scan_samples directory")
+        scan_source="this run's raw-Livox-derived processed PointCloud2 samples"
+    else:
+        audit=json.loads(args.audit.read_text(encoding="utf8"))
+        assets=args.audit.parent/"new_bag_assets"
+        samples=audit["scan_samples"]
+        manifest={"source_topic":"/cloud_registered_body","raw_source_topic":None}
+        scan_source="legacy processed PointCloud2 samples from new_bag_audit.json"
     final_status=run_status.get("last_fusion_status") or {}
     if "mount_pitch_deg" not in run_summary or "mount_rpy" not in final_status or "mount_xyz" not in final_status:
         parser.error("Run summary/status does not record mounting pitch and translation")
@@ -463,7 +514,9 @@ def main():
                                           "map_coordinates_match_actual_run":True,"actual_run_map":str(actual_map)},
             "extrinsic":{"base_T_body":base_T_body.tolist(),"translation_m":args.translation,"pitch_deg":args.mount_pitch_deg,
                          "status":"temporary forward-tilt assumption authorized by user; pitch estimated from 729 stationary IMU samples, not independently measured calibration"},
-            "scan_sampling":{"requested_samples":len(audit["scan_samples"]),"source":"ten real scans from new_bag_audit.json", "voxel_size_m":args.voxel_size,
+            "scan_sampling":{"requested_samples":len(samples),"source":scan_source,
+                             "source_topic":manifest["source_topic"],"raw_source_topic":manifest["raw_source_topic"],
+                             "historical_processed_clouds_consumed":not raw_livox,"voxel_size_m":args.voxel_size,
                              "maximum_absolute_header_time_difference_s":args.max_time_difference},
             "streams":{},"limitations":["Nearest-neighbor overlap and residual measure geometric consistency, not localization pose error.",
                 "A wrong pose can still align with repeated or weak geometry; no independent truth trajectory is available.",
@@ -483,23 +536,34 @@ def main():
                                   "rejected_rows":rejected,"duplicate_header_timestamps":len(timestamps)-len(set(timestamps)),
                                   "header_coverage_ns":[timestamps[0],timestamps[-1]] if timestamps else None,
                                   "estimated_trajectory_length_m":float(np.linalg.norm(np.diff(positions,axis=0),axis=1).sum()) if len(data)>1 else 0.,
-                                  "geometry":geometry(audit["scan_samples"],assets,data,base_T_body,tree,args.max_time_difference,args.voxel_size)}
+                                  "geometry":geometry(samples,assets,data,base_T_body,tree,args.max_time_difference,args.voxel_size)}
     gyro=read_csv(args.results/"gyro.csv")
     report["gyro_csv_summary"]=numeric_metrics(gyro)
     metric_rows=read_csv(args.results/"metrics.csv")
     report["metrics_csv_summary"]=numeric_metrics(metric_rows)
-    input_topics={t["name"]:t for t in audit["bag"]["topics"]}
     common_interval=None
-    if all(name in input_topics for name in ("/hunter_odom","/livox/imu")):
-        intervals=[input_topics[name]["header_timing"] for name in ("/hunter_odom","/livox/imu")]
-        common_interval=[max(t["first_ns"] for t in intervals),min(t["last_ns"] for t in intervals)]
+    if raw_livox:
+        ranges=run_summary.get("input_header_ranges_ns",{})
+        if all(name in ranges for name in ("/hunter_odom","/livox/imu")):
+            intervals=[ranges[name] for name in ("/hunter_odom","/livox/imu")]
+            common_interval=[max(t[0] for t in intervals),min(t[1] for t in intervals)]
+    else:
+        input_topics={t["name"]:t for t in audit["bag"]["topics"]}
+        if all(name in input_topics for name in ("/hunter_odom","/livox/imu")):
+            intervals=[input_topics[name]["header_timing"] for name in ("/hunter_odom","/livox/imu")]
+            common_interval=[max(t["first_ns"] for t in intervals),min(t["last_ns"] for t in intervals)]
+    if common_interval and common_interval[0]>common_interval[1]:
+        common_interval=None
     report["native_ekf_update_evidence"]=native_update_evidence(args.results/"diagnostics.jsonl",common_interval)
+    report["native_ekf_update_evidence"]["common_input_interval_available"]=common_interval is not None
     report["recorded_run_status"]=run_status
-    report["registration_fluctuation_check"]=inspect_ndt_step(streams,gyro,metric_rows,audit,tree,base_T_body,args.voxel_size,args.max_time_difference)
-    report["evaluation_complete"]=all(s["geometry"]["matched_samples"]==s["geometry"]["requested_samples"] for s in report["streams"].values())
+    report["registration_fluctuation_check"]=inspect_ndt_step(streams,gyro,metric_rows,audit,tree,base_T_body,args.voxel_size,args.max_time_difference,
+        current_samples=samples if raw_livox else None,current_assets=assets if raw_livox else None)
+    report["evaluation_complete"]=bool(samples) and all(s["geometry"]["matched_samples"]==s["geometry"]["requested_samples"] for s in report["streams"].values())
     (output/"validation.json").write_text(json.dumps(report,indent=2,ensure_ascii=False),encoding="utf8")
     make_plots(output,map_points,streams,gyro)
-    lines=["# 融合输出的点云几何验证", "", "仅使用本次 EKF/NDT 输出位姿、真实 body 点云和 GlobalMap 点云地图，没有使用旧 TF 作为参考真值。", "",
+    lines=["# 融合输出的点云几何验证", "", "仅使用本次 EKF/NDT 输出位姿、真实 body 点云和本次配置的点云地图，没有使用旧 TF 作为参考真值。", "",
+           (f'点云来源：原始 `{manifest["raw_source_topic"]}` 经本次处理节点输出 `{manifest["source_topic"]}`，由本次回放保存样本；未使用旧 `/cloud_registered_body` 或旧审计点云。' if raw_livox else "点云来源：历史运行的 `/cloud_registered_body` 审计样本。"), "",
            f'暂定 body 安装外参：平移 `{args.translation}` m，前倾 pitch `+{args.mount_pitch_deg}°`。该角度来自静止 IMU 估计和用户授权，尚不是独立实测标定。', "",
            f"按 `T_map_body = T_map_base × T_base_body` 转换扫描，每帧选择时间差不超过 {args.max_time_difference}s 的最近位姿；未匹配帧不计算几何分数。", "",
            "| 输出 | 有效位姿 | 匹配扫描 | 0.2m重叠率 | 0.5m重叠率 | 最近邻中值(m) | 0.2m内RMSE(m) |", "|---|---:|---:|---:|---:|---:|---:|"]
@@ -522,17 +586,24 @@ def main():
     if jumps["largest_steps"]["ndt"]:
         j=jumps["largest_steps"]["ndt"]
         e=jumps["largest_steps"]["ekf"]
-        lines += [f'NDT 最大相邻位移 **{j["distance_m"]:.6f}m / {j["dt_s"]:.6f}s**，出现在首帧后 {j["seconds_since_first_pose"]:.3f}s（header `{j["first_stamp_ns"]}` → `{j["second_stamp_ns"]}`）；xyz 变化 `{j["delta_xyz_m"]}` m。', "",
-                  f'附近轮速×该时间间隔约 {jumps["rough_wheel_speed_times_step_dt_m"]:.3f}m，明显小于 NDT 跳动；匹配分数仍较高，说明“全部收敛”不能代替连续性和精度评估。EKF 全程最大相邻位移为 {e["distance_m"]:.6f}m / {e["dt_s"]:.6f}s，但这是 50Hz 输出，不能只凭步长与 10Hz NDT 直接比较精度。', "",
-                  "波动根因尚未确定；这两帧的地图重合度仍较高，不能据此判定 NDT 或 EKF 的真实位姿误差。", "",
-                  "| 波动附近扫描 header | 位姿输出 | 0.2m重叠率 | 0.5m重叠率 | 最近邻中值(m) |", "|---|---|---:|---:|---:|"]
+        lines += [f'NDT 最大相邻位移 **{j["distance_m"]:.6f}m / {j["dt_s"]:.6f}s**，出现在首帧后 {j["seconds_since_first_pose"]:.3f}s（header `{j["first_stamp_ns"]}` → `{j["second_stamp_ns"]}`）；xyz 变化 `{j["delta_xyz_m"]}` m。', ""]
+        wheel_distance=jumps["rough_wheel_speed_times_step_dt_m"]
+        if wheel_distance is not None:
+            lines += [f'附近轮速×该时间间隔约 {wheel_distance:.3f}m；仅供相邻位移量级对照，匹配分数与收敛结果不能代替连续性和精度评估。', ""]
+        if e:
+            lines += [f'EKF 全程最大相邻位移为 {e["distance_m"]:.6f}m / {e["dt_s"]:.6f}s。EKF 与 NDT 输出频率不同，不能只凭相邻步长直接比较精度。', ""]
+        if jumps.get("geometry_unavailable_reason"):
+            lines += ["本次未保存最大波动对应的完整两帧处理后点云，仅报告输出跳动统计；没有用旧 `/cloud_registered_body` 替代，无法给出这两帧的几何分数。" if raw_livox else jumps["geometry_unavailable_reason"], ""]
+        else:
+            lines += ["波动根因尚未确定；以下仅评估对应扫描的地图几何一致性，不能据此判定真实位姿误差。", "",
+                      "| 波动附近扫描 header | 位姿输出 | 0.2m重叠率 | 0.5m重叠率 | 最近邻中值(m) |", "|---|---|---:|---:|---:|"]
         for item in jumps["geometry_checks"]:
             for name,v in item.get("outputs",{}).items():
                 if "distance_median_m" in v:
                     lines.append(f'| {item["stamp_ns"]} | {name.upper()} | {v["overlap_within_0.2m"]:.2%} | {v["overlap_within_0.5m"]:.2%} | {v["distance_median_m"]:.6f} |')
     lines += ["", "## 限制与时序", "",
               f'运行状态样本计数：`{run_status["fusion_mode_sample_counts"]}`；最后模式为 `{(run_status.get("last_fusion_status") or {}).get("mode","unknown")}`，因此不能声称全包每一时刻都持续 FUSED。', "",
-              "点云/IMU 比轮速早约 1.313 秒结束，另有 0.2 秒回放尾部时钟，尾部进入 STALE 并停止公开输出。内部 IMU 缺口也会触发较严格的 gyro 超时；上面的 10s 覆盖检查只证明两路持续参与，不代表无缺口。", "",
+              "传感器各路结束时间和内部缺口会影响融合模式；以本次状态与诊断记录为准。上面的 10s 覆盖检查只证明两路参与，不代表无缺口；未记录共同输入时间范围时，该分段检查不可验证。", "",
               f'回放时间定义：`{run_summary.get("input_time_basis","unknown")}`；复现原记录接收延迟：`{run_summary.get("recording_delay_reproduced","unknown")}`。按 header 排序验证采集数据融合，不验证原实机到达延迟。', "",
               "轨迹长度是估计路径的累加长度，不能视为实车真实里程；地图和外参没有独立地面真值。临时安装角、噪声协方差与超时参数仍需实测标定和实机验证。", "",
               "这些数值表示点云与地图的几何一致性，不表示定位位姿精度；没有独立地面真值。0.2m 内 RMSE 仅使用阈值内的匹配点，不能忽略重叠率来解释。", "",

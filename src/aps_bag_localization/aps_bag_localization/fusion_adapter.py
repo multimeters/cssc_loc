@@ -96,6 +96,8 @@ class FusionAdapter(Node):
         self.create_timer(self.p['tick_period'], self.tick, clock=self.wall_clock)
         self.create_timer(self.p['status_period'], self.publish_status, clock=self.wall_clock)
         self.get_logger().info('Native gyro -> EKF; native NDT pose -> EKF; EKF prior -> NDT. '
+                               'Cloud input is raw Livox preprocessed at scan end; '
+                               'deskew coverage is reported separately by the preprocessor. '
                                'Outputs represent the rear wheel center. Mounting pitch is provisional.')
 
     def now_ns(self):
@@ -293,6 +295,9 @@ class FusionAdapter(Node):
         now = self.now_ns() * 1e-9
         status = {
             'configuration_file': self.config_path,
+            'pointcloud_source_topic': self.p['points_topic'],
+            'raw_pointcloud_topic': self.p['raw_points_topic'],
+            'pointcloud_timestamp_reference': 'scan_end',
             'mode': mode, 'public_output_enabled': usable,
             'chain': 'wheel_and_imu_to_native_gyro_to_native_ekf_and_native_ndt',
             'ndt_prior_source': 'native_ekf_only', 'wheel_pose_used': False,

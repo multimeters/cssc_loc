@@ -2,6 +2,8 @@
 
 本程序从 `libpet-co/autoware.APS` 默认分支 `hmi_container_dev` 提取定位所需组件，使用原生 Autoware **轮速＋IMU → gyro_odometer → EKF，NDT 位姿 → EKF，EKF 预测 → NDT** 链路。输出参考点是车辆后轮中心。
 
+**默认直接使用 Livox MID-360 原始 `/livox/lidar`（`livox_ros_driver2/msg/CustomMsg`）做定位。** 原始点云经过本程序的逐点时间解码、距离与置信度过滤、轮速/IMU 运动补偿，再与 `GlobalMap_loc.pcd` 做 NDT 匹配；一键回放不读取录包中的 `/cloud_registered_body`。
+
 **所有本次定位参数均从 YAML 读取，外参只在 `config/localization.yaml` 定义一次。** 一键入口负责检查配置和数据、增量编译、启动节点、回放录包、保存结果并关闭本次启动的进程。
 
 ## 一键启动
@@ -103,13 +105,37 @@ MID360 官方手册确认内部 IMU 与点云输出三轴同向，原点有上�
 
 锁定版本的原生 gyro 存在坐标旋转方向问题，适配器先按正确外参变换角速度及协方差，再交给原生 gyro；原始录包和上游源码没有改写。依据见 [`reports/gyro_transform_review.md`](reports/gyro_transform_review.md)。
 
+### 原始 Livox 点云处理
+
+输入与计算链路为：
+
+```text
+/livox/lidar (CustomMsg) ── 解码、过滤、逐点运动补偿 ── /localization/pointcloud/deskewed
+                                  ↑                              │
+/hunter_odom 的前向速度 ────────────┤                          可选下采样
+/livox/imu 的三轴角速度 ────────────┘                              │
+                                                              NDT ← PCD 地图
+轮速 + IMU → 原生 gyro_odometer → 原生 EKF ←───────────────────────┘
+                                      └── 预测位姿送回 NDT
+```
+
+`livox` 下的 YAML 参数控制原始消息 frame 校验、距离范围、标签过滤、允许的扫描时长、IMU/轮速采样间隔和等待时间。逐点时刻为 `timebase + offset_time`（纳秒），补偿到该扫描最后一个点的时刻；派生 PointCloud2 的时间戳采用这个帧末时刻。完整三维旋转与前向平移使用同一组安装外参，并计入后轮中心到雷达原点的杠杆臂。
+
+`adapter.voxel_size` 控制可选体素下采样，当前为 `0.0`，保留经过前述过滤的所有点。`adapter.scan_relay_delay: 0.08` 给原生 NDT 留出转发间隔（墙钟秒）；其输入队列只保留一帧，过小的间隔可能在缺测等待后集中转发时覆盖尚未处理的扫描。
+
+**原始点云的 `header.frame_id` 虽然也是 `livox_frame`，其 XYZ 表示雷达点云原点，不是 IMU 芯片原点。** 本程序检查这个驱动标签后，将点云按已确认同原点同方向的 `body` 输出；不会对原始点云误加 `lidar_to_imu` 的平移。IMU 角速度仍按 IMU 到车体的旋转变换。
+
+录包存在 IMU 缺口。只有覆盖整段扫描且相邻样本间隔满足 YAML 门限时，才进行完整去畸变；覆盖不足则整帧保留未补偿坐标供 NDT 匹配，并明确记录 `uncompensated`，不使用轮速里程计的姿态/角速度或旧定位 TF 填补。此时帧末时间戳仅表示选定的扫描参考时刻，并不表示该帧已经完成运动补偿。
+
+仓库提供与官方消息定义一致的 `livox_ros_driver2` **消息接口包**，用于反序列化和订阅 CustomMsg，不包含硬件驱动或 Livox SDK。当前一键入口完成录包定位；连接实体雷达时，需在独立驱动工作区运行官方驱动并保持消息定义一致。
+
 ### 初值、地图和回放
 
 `initial_pose.reference: cloud` 表示初值是 **map → body**；`xyz_m` 为米，**这里的 `rpy_rad` 为弧度**。启动时自动用外参换算为后轮中心位姿。当前初值来自 `GlobalMap_loc.pcd` 的首帧几何配准，不是未知起点的全局重定位；换地图或录包时必须同步核查初值。
 
-默认回放参数位于 `replay`：倍速 `rate: 0.5`、隔离域 `domain_id: 58`、仅本机通信 `localhost_only: true`。默认只融合 `/hunter_odom` 的前向速度和 `/livox/imu` 的角速度，不消费轮速累计 pose、轮速角速度、IMU orientation 或 IMU 加速度。
+默认回放参数位于 `replay`：倍速 `rate: 0.5`、隔离域 `domain_id: 58`、仅本机通信 `localhost_only: true`。点云输入为 `/livox/lidar`；运动输入为 `/hunter_odom` 的前向速度和 `/livox/imu` 的角速度。不消费轮速累计 pose、轮速角速度、IMU orientation 或 IMU 加速度。
 
-录包回放要求 `runtime.use_sim_time: true`。输入按原始 header 采集时间排序，消息内容和时间戳不改，不复现原系统约 1.4 秒的点云记录延迟。首端仅预热时钟 3 秒，末端推进 0.2 秒用于处理尾部输出，不添加虚构传感器观测。
+录包回放要求 `runtime.use_sim_time: true`。输入按原始 header 采集时间排序，原始消息内容和时间戳不改，不复现原系统的消息记录延迟。原始扫描先进入缓存，待运动观测覆盖帧末后处理；派生点云使用上文所述帧末时间。首端仅预热时钟 3 秒，末端推进 0.6 秒用于处理尾部扫描和缺测等待，不添加虚构传感器观测；末端时长必须至少覆盖 `max_scan_duration_s + wait_timeout_s`。
 
 ## 常用命令
 
@@ -149,6 +175,8 @@ Windows 将上述 `bash start.sh` 替换为 `.\start.cmd` 即可，例如：
 | `summary.json` | 是否完整回放、输入计数、NDT 收敛比例、EKF 两路更新和连续性检查 |
 | `ekf.csv`、`ndt.csv`、`gyro.csv` | 位姿与速度结果 |
 | `diagnostics.jsonl`、`fusion_status.jsonl` | 原生诊断、降级状态及配置来源 |
+| `preprocessing_status.jsonl` | 原始 Livox 收发计数、完整补偿和未补偿扫描数量及原因 |
+| `scan_samples.json`、`scan_samples/*.npy` | 从本次原始点云处理输出抽样保存的实际点云，用于几何评估 |
 | `metrics.csv`、`inputs.csv`、`launch.log` | 匹配指标、实际发布记录与节点日志 |
 
 `summary.json` 中 `status: completed`、`full_bag_completed: true` 和 `estimator_checks_passed: true` 表示完整回放及当前运行检查通过；这些字段**不表示绝对定位精度通过**。短段回放会标为 `partial`。
@@ -162,34 +190,39 @@ Windows 将上述 `bash start.sh` 替换为 `.\start.cmd` 即可，例如：
 | `/localization/pose_estimator/pose_with_covariance` | 通过原生收敛判据的 NDT 位姿 |
 | `/localization/twist_estimator/twist_with_covariance` | 原生 gyro 融合速度 |
 | `/localization/fusion_status` | 输入新鲜度、接收数量与外参来源 |
+| `/localization/pointcloud/deskewed` | 原始 Livox 派生 PointCloud2；是否完整补偿需结合状态话题判断 |
+| `/localization/livox/status` | 去畸变覆盖情况及过滤统计 |
 
 公开 TF 为 `map → base_footprint`。RViz 的 Fixed Frame 使用 `map`；原生 NDT 的调试 TF 已隔离，不作为正式定位结果。入口默认完成离线回放并保存结果，不自动打开 RViz。
 
 可生成点云/地图几何评估图：
 
 ```bash
-python3 scripts/audit_new_bag.py --data-root /你的数据路径/zhongchuanbag
 python3 scripts/evaluate_fusion_result.py --results artifacts/fusion/某次结果目录
 ```
 
-评估器会检查实际运行配置，当前几何评估工具仅支持本次纯 pitch 安装；若改为非零 roll/yaw，它会明确拒绝，不会默默套用旧角度。NumPy、SciPy、Matplotlib 已包含在依赖安装脚本中。
+评估器会检查实际运行配置。原始 Livox 运行只使用本次保存的派生点云样本，不使用旧录包中的处理后点云替代。当前几何评估工具仅支持本次纯 pitch 安装；若改为非零 roll/yaw，它会明确拒绝。NumPy、SciPy、Matplotlib 已包含在依赖安装脚本中。
 
 ## 已完成的验证与限制
 
-本次统一 YAML / 一键启动版本已通过 28 项测试，并从空缓存完整编译 33 个包；随后实际从 Windows `start.cmd` 启动、再次增量编译并完成整包回放，969/969 帧通过 NDT 收敛检查，程序正常退出。新 Git 克隆目录的源码校验、配置读取和启动预检也已通过。详细记录见 [`reports/yaml_release_validation.json`](reports/yaml_release_validation.json) 和 [`reports/windows_launcher_validation.json`](reports/windows_launcher_validation.json)。
+**当前原始 Livox 版本**已通过 55 项测试、34 包编译和 Windows 一键完整回放：967 帧原始 CustomMsg 全部完成转换和转发，967/967 帧输出通过原生收敛检查的 NDT 位姿；同时获得 1,747 条 gyro 融合速度及 3,661 条公开 EKF 位姿。原生 EKF 诊断确认点云位姿和轮速/IMU 速度都持续进入更新路径。10 帧本次派生点云抽样的 EKF 结果在 0.2 米内地图重合率约 96.08%，这不是独立真值定位精度。
 
-2026-09-30 的原始完整融合验证得到 969/969 帧 NDT 位姿、1,679 条 gyro 融合速度和 4,889 条公开 EKF 位姿。两类测量均有持续进入 EKF 原生更新路径的证据；10 帧点云抽样中，EKF 变换结果在 0.2 米内的地图重叠率约 93.09%。详见 [`reports/final_fusion_validation/validation.md`](reports/final_fusion_validation/validation.md)。
+当前严格采样间隔门限下，**48 帧完成完整去畸变，919 帧因 IMU/轮速覆盖不足而整帧未补偿**，无扫描拒收。完整回放成功不意味着每帧都有足够 IMU 数据；状态与报告保留这一差异。详见 [原始 Livox 运行验证](reports/raw_livox_release_validation.json)、[点云与地图几何报告](reports/raw_livox_fusion_validation/validation.md)、[原始输入审计](reports/raw_livox_input_audit.json) 和 [原始首帧初值检查](reports/raw_livox_initial_check.json)。
+
+此前使用 `/cloud_registered_body` 的版本通过了 28 项测试、33 包编译及 Windows 一键整包回放；这些是历史记录，不能作为当前原始 `/livox/lidar` 链路的验证结果。详细记录见 [`reports/yaml_release_validation.json`](reports/yaml_release_validation.json) 和 [`reports/windows_launcher_validation.json`](reports/windows_launcher_validation.json)。
+
+历史处理后点云完整融合验证得到 969/969 帧 NDT 位姿、1,679 条 gyro 融合速度和 4,889 条公开 EKF 位姿，见 [`reports/final_fusion_validation/validation.md`](reports/final_fusion_validation/validation.md)。
 
 已知限制保留在本次版本中：
 
 - 安装角与协方差下限仍是试验参数，没有独立真值轨迹，几何重合度不等于定位位姿精度。
-- IMU 录包存在间断，期间会出现 `NDT_ONLY` 等状态；尾部点云/IMU 比轮速早结束，最终进入 `STALE` 并停止公开输出。
-- 第 62.7 秒附近，NDT 在约 0.1 秒内跳动约 0.64 米，超过同期轮速对应位移，根因尚未确定。全帧收敛不能替代质量验证。
-- 使用的是录包已有的 `/cloud_registered_body` 处理后点云；本程序不重做 Livox 原始包转换和去畸变，也不重放旧定位 TF。
+- IMU 录包存在间断，期间会出现 `NDT_ONLY` 等状态。观测结束后仅允许配置时限内的预测；本次回放在有限尾部时钟后退出，最终状态以实际记录为准。
+- 历史处理后点云版本在第 62.7 秒附近出现过约 0.64 米的 NDT 跳动；新链路也需独立检查连续性。全帧收敛不能替代质量验证。
+- 原始扫描只有在 IMU 和轮速覆盖充分时才能完整去畸变，未补偿帧在运动中仍可能存在畸变。
 
 ## 工作区与源码来源
 
-主配置在根目录 `config/`；启动程序在 `start.*`、`scripts/`；输入适配与配置校验在 `src/aps_bag_localization/`；原生依赖在 `src/vendor/`。共保留 7 个上游仓库内的 31 个 ROS 包，以及 2 个适配包。辅助 NDT/旧相对里程计入口属于历史诊断工具，正式一键启动使用完整融合链。
+主配置在根目录 `config/`；启动程序在 `start.*`、`scripts/`；输入适配与配置校验在 `src/aps_bag_localization/`；原生依赖在 `src/vendor/`。保留 7 个 Autoware 上游仓库内的 31 个 ROS 包，加上 2 个适配包和 1 个 Livox 消息接口包，共 34 包。辅助 NDT/旧相对里程计入口属于历史诊断工具，正式一键启动使用原始 Livox 完整融合链。
 
 构建缓存默认位于 `~/.cache/cssc_loc/<当前仓库路径哈希>/`，不同克隆目录互不混用。可通过 `APS_BUILD_ROOT` 显式指定缓存路径；不要把另一份源目录生成的 CMake 缓存搬过来复用。构建产物、大型数据、运行日志和配置快照不提交 Git。
 

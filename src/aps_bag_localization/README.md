@@ -24,6 +24,7 @@ The main file contains:
 - `frames`, `topics`, `services`: graph names shared by adapters and native nodes.
 - `extrinsics`: the four physical/identity transforms, with provenance.
 - `initial_pose`: map-to-cloud-frame seed, covariance and provenance.
+- `livox`: raw CustomMsg label, range/tag filters, scan timing and motion-coverage limits.
 - `adapter`: covariance floors, observation/relay timeouts, queue depths and timers.
 - `runtime`, `replay`: simulated time, domain, replay rate and timing.
 - `native_parameters`: paths to the complete gyro, EKF, NDT and map-loader YAML files.
@@ -47,16 +48,25 @@ share directory as well as the repository.
 ```text
 wheel forward speed ------> native gyro_odometer ---> native EKF twist
 IMU angular velocity ---------------^
-body PointCloud2 ----------> native NDT ------------> native EKF pose
+/livox/lidar CustomMsg --> timed filtering + measured-motion deskew
+                          --> body PointCloud2 --> native NDT --> native EKF pose
 native EKF predicted pose --------------------------> native NDT prior
 ```
 
 No NDT self-feedback node runs in this launch. The adapter has no continuous
 prior or pose-observation publisher. It publishes the configured initial pose
 once, after both native activation services succeed. The cloud relay waits until
-actual EKF predictions cover each original scan timestamp and then forwards it.
+actual EKF predictions cover each derived scan-end timestamp and then forwards it.
 Wheel pose and wheel angular velocity are not consumed. IMU acceleration and
 orientation are marked unavailable.
+
+The preprocessor handles unordered per-point offsets using integer nanosecond
+timestamps. It compensates 3-D rotation and forward translation, including the
+lidar mounting lever arm. A scan without complete IMU/wheel coverage is published
+whole and uncorrected, explicitly counted as `uncompensated`; its nominal end
+header does not imply successful deskew. Timeouts use the simulated clock, so
+slow replay cannot publish scans before acquisition ends. The bag's historical
+`/cloud_registered_body` is never an input to the main replay.
 
 Replay with the repository's acquisition-time runner. It orders unchanged
 recorded sensor messages by their original header timestamp and supplies
@@ -74,6 +84,10 @@ rear -> lidar          one configurable mounting transform
 lidar -> cloud         confirmed identity alias
 lidar -> IMU           physical internal IMU offset and axis orientation
 ```
+
+Raw Livox messages reuse the `livox_frame` label for point coordinates at the
+lidar origin. They are interpreted as lidar points and emitted in the confirmed
+identity cloud frame; the IMU chip translation is never applied to raw points.
 
 The loader rejects a non-identity rear-to-base transform, a non-identity
 lidar-to-cloud alias, or a base frame other than `base_link`, because those would

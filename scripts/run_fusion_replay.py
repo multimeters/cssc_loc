@@ -37,7 +37,7 @@ METRICS = ['nearest_voxel_transformation_likelihood', 'transform_probability',
 def input_types(cfg):
     topics = cfg['topics']
     return {topics['wheel']: 'nav_msgs/msg/Odometry', topics['imu']: 'sensor_msgs/msg/Imu',
-            topics['points']: 'sensor_msgs/msg/PointCloud2'}
+            topics['points']: 'livox_ros_driver2/msg/CustomMsg'}
 
 
 def inspect_inputs(bag, expected):
@@ -147,6 +147,7 @@ def main():
     from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
     from nav_msgs.msg import Odometry
     from sensor_msgs.msg import Imu, PointCloud2
+    from livox_ros_driver2.msg import CustomMsg
     from geometry_msgs.msg import PoseWithCovarianceStamped, TwistWithCovarianceStamped
     from rosgraph_msgs.msg import Clock
     from diagnostic_msgs.msg import DiagnosticArray
@@ -178,6 +179,11 @@ def main():
     update_stamps = {kind: [] for kind in update_evidence}
     diagnostic_stamps = set()
     fusion_status = {}
+    preprocessing_status = {}
+    scan_samples = []
+    processed_stamps = []
+    sample_directory = args.output/'scan_samples'
+    sample_directory.mkdir()
     counts = Counter()
     report = {
         'status': 'starting', 'source_bag': str(args.bag.resolve()), 'map': str(args.map.resolve()),
@@ -186,6 +192,14 @@ def main():
         'source_configuration': str(args.config.resolve()), 'effective_configuration': str(config_snapshot.resolve()),
         'input_time_basis': 'original acquisition header timestamps, sorted; payloads unchanged',
         'recording_delay_reproduced': False, 'source_input_counts': dict(Counter(e[2] for e in events)),
+        'input_header_ranges_ns': {name: [min(e[0] for e in events if e[2] == name),
+                                            max(e[0] for e in events if e[2] == name)]
+                                   for name in inputs},
+        'pointcloud_input_topic': topics['points'],
+        'pointcloud_input_type': inputs[topics['points']],
+        'processed_pointcloud_topic': topics['processed_points'],
+        'processed_cloud_reference_time': 'scan end = timebase + max(offset_time)',
+        'recorded_processed_pointcloud_used': False,
         'ros_domain_id': args.domain_id, 'rate': args.rate, 'max_bag_seconds': args.max_bag_seconds,
         'source_header_span_s': (source_end-t0)/1e9, 'accuracy_verified': False,
         'native_pipeline': 'wheel speed + IMU -> gyro_odometer -> EKF; NDT -> EKF; EKF -> NDT',
@@ -207,9 +221,10 @@ def main():
     csv_file('inputs', ['topic', 'stamp_ns', 'recording_ns'])
     files['diagnostics'] = (args.output/'diagnostics.jsonl').open('x')
     files['fusion_status'] = (args.output/'fusion_status.jsonl').open('x')
+    files['preprocessing_status'] = (args.output/'preprocessing_status.jsonl').open('x')
     rclpy.init()
     node = Node('aps_fusion_test_driver')
-    types = {topics['wheel']: Odometry, topics['imu']: Imu, topics['points']: PointCloud2}
+    types = {topics['wheel']: Odometry, topics['imu']: Imu, topics['points']: CustomMsg}
     qos = QoSProfile(depth=1000, reliability=ReliabilityPolicy.RELIABLE)
     pubs = {topic: node.create_publisher(typ, topic, qos) for topic, typ in types.items()}
     clock_pub = node.create_publisher(Clock, topics['clock'], 10)
@@ -271,6 +286,33 @@ def main():
         fusion_status.update(json.loads(msg.data))
         files['fusion_status'].write(msg.data+'\n')
 
+    def on_preprocessing_status(msg):
+        preprocessing_status.clear()
+        preprocessing_status.update(json.loads(msg.data))
+        files['preprocessing_status'].write(msg.data+'\n')
+
+    def on_processed_cloud(msg):
+        # Geometry evidence comes from this run's raw-input processing output,
+        # never from the recorded /cloud_registered_body or old localization TF.
+        import numpy as np
+        index = len(processed_stamps)
+        processed_stamps.append(stamp_ns(msg.header.stamp))
+        if index % limits['scan_sample_stride']:
+            return
+        names = ('x', 'y', 'z', 'intensity')
+        fields = {field.name: field for field in msg.fields}
+        dtype = np.dtype({'names': names,
+                          'formats': [('>f4' if msg.is_bigendian else '<f4')]*4,
+                          'offsets': [fields[name].offset for name in names],
+                          'itemsize': msg.point_step})
+        points = np.ndarray((msg.height, msg.width), dtype=dtype, buffer=msg.data,
+                            strides=(msg.row_step, msg.point_step))
+        values = np.column_stack([points[name].ravel() for name in names])
+        filename = f'scan-{index:06d}.npy'
+        np.save(sample_directory/filename, values)
+        scan_samples.append({'index': index, 'stamp_ns': stamp_ns(msg.header.stamp),
+                             'frame_id': msg.header.frame_id, 'npy': filename})
+
     subscriptions += [
         node.create_subscription(Odometry, topics['odometry'],
                                  lambda msg: on_pose(msg, 'ekf'), qos),
@@ -282,6 +324,9 @@ def main():
         node.create_subscription(DiagnosticArray, topics['diagnostics'], on_diagnostics, qos),
         node.create_subscription(String, topics['fusion_status'], on_status,
                                  QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)),
+        node.create_subscription(String, topics['preprocessing_status'], on_preprocessing_status,
+                                 QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)),
+        node.create_subscription(PointCloud2, topics['processed_points'], on_processed_cloud, qos),
     ]
     for name in METRICS:
         typ = Int32Stamped if name == 'iteration_num' else Float32Stamped
@@ -324,12 +369,18 @@ def main():
                        'note': 'Native update path, with repeated smoothing cycles; not unique message count.'}
                        for k,v in update_evidence.items()},
                    last_fusion_status=dict(fusion_status),
+                   last_preprocessing_status=dict(preprocessing_status),
+                   processed_clouds_received=len(processed_stamps),
+                   processed_cloud_non_increasing_stamps=sum(b <= a for a,b in zip(processed_stamps, processed_stamps[1:])),
+                   geometry_scan_samples=len(scan_samples),
                    metric_stats={k:finite_stats(v) for k,v in metric_values.items()},
                    diagnostics=[{'name':k[0], 'level':k[1], 'message':k[2], 'count':v}
                                 for k,v in diag_messages.most_common(150)])
         ratio = len(rows['ndt'])/max(1,counts[topics['points']])
         out['ndt_accepted_to_published_ratio'] = ratio
         out['estimator_checks_passed'] = (
+            len(processed_stamps) == counts[topics['points']] and
+            out['processed_cloud_non_increasing_stamps'] == 0 and
             len(rows['gyro']) >= limits['min_gyro_messages'] and ratio >= limits['min_ndt_acceptance_ratio'] and
             out['ekf']['count'] >= limits['min_ekf_messages'] and
             out['ekf']['invalid_poses'] == 0 and out['ndt']['invalid_poses'] == 0 and
@@ -351,6 +402,9 @@ def main():
         for stream in files.values():
             stream.flush()
         (args.output/'summary.json').write_text(json.dumps(report, indent=2)+'\n')
+        (args.output/'scan_samples.json').write_text(json.dumps({
+            'source_topic': topics['processed_points'], 'raw_source_topic': topics['points'],
+            'scan_samples': scan_samples}, indent=2)+'\n')
 
     def spin_for(duration):
         end = time.monotonic()+duration

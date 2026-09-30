@@ -10,7 +10,8 @@ from .geometry import body_pose_to_base, quaternion_multiply, quaternion_rpy
 
 
 FRAME_KEYS = ('map', 'rear', 'base', 'lidar', 'cloud', 'imu', 'wheel', 'ndt_debug')
-TOPIC_KEYS = ('wheel', 'imu', 'points', 'wheel_twist', 'imu_base', 'ndt_points',
+TOPIC_KEYS = ('wheel', 'imu', 'points', 'processed_points', 'preprocessing_status',
+              'wheel_twist', 'imu_base', 'ndt_points',
               'initial_pose', 'odometry', 'pose', 'ndt_pose', 'ndt_pose_stamped',
               'ekf_prediction', 'ekf_odometry', 'gyro_twist', 'fusion_status',
               'diagnostics', 'ekf_tf', 'ndt_tf', 'metrics_prefix', 'clock')
@@ -96,7 +97,7 @@ def load_config(path):
     with source.open(encoding='utf-8') as handle:
         config = yaml.safe_load(handle)
     require_keys(config, ('schema_version', 'paths', 'runtime', 'replay', 'frames', 'topics',
-                         'services', 'extrinsics', 'initial_pose', 'adapter', 'native_parameters', 'validation'), 'config')
+                         'services', 'extrinsics', 'initial_pose', 'livox', 'adapter', 'native_parameters', 'validation'), 'config')
     config = copy.deepcopy(config)
     if type(config['schema_version']) is not int or config['schema_version'] != 1:
         raise ValueError('Only schema_version 1 is supported')
@@ -132,6 +133,8 @@ def load_config(path):
     sensor_topics = [config['topics'][name] for name in ('wheel', 'imu', 'points')]
     if len(set(sensor_topics)) != 3:
         raise ValueError('Wheel, IMU and cloud input topics must differ')
+    if config['topics']['processed_points'] in (*sensor_topics, config['topics']['ndt_points']):
+        raise ValueError('Processed PointCloud2 must have a separate topic from raw inputs and NDT relay')
     if config['topics']['ekf_prediction'] == config['topics']['ndt_pose']:
         raise ValueError('EKF prediction and NDT observation topics must differ')
     extrinsics = config['extrinsics']
@@ -161,6 +164,24 @@ def load_config(path):
     initial['rpy_rad'] = vector(initial['rpy_rad'], 3, 'initial_pose.rpy_rad')
     initial['covariance_diagonal'] = vector(initial['covariance_diagonal'], 6,
                                              'initial_pose.covariance_diagonal', positive=True)
+    livox = config['livox']
+    require_keys(livox, ('raw_frame', 'min_range_m', 'max_range_m', 'max_scan_duration_s',
+                         'max_imu_gap_s', 'max_wheel_gap_s', 'buffer_seconds', 'wait_timeout_s',
+                         'reject_invalid_tags', 'header_tolerance_s'), 'livox')
+    if not isinstance(livox['raw_frame'], str) or not livox['raw_frame'] or livox['raw_frame'].startswith('/'):
+        raise ValueError('livox.raw_frame must be a nonempty recorded frame without leading slash')
+    for name in ('min_range_m', 'header_tolerance_s'):
+        livox[name] = number(livox[name], 'livox.' + name, 0.)
+    for name in ('max_range_m', 'max_scan_duration_s', 'max_imu_gap_s', 'max_wheel_gap_s',
+                 'buffer_seconds', 'wait_timeout_s'):
+        livox[name] = number(livox[name], 'livox.' + name, 0., True)
+    boolean(livox['reject_invalid_tags'], 'livox.reject_invalid_tags')
+    if livox['max_range_m'] <= livox['min_range_m']:
+        raise ValueError('livox.max_range_m must exceed min_range_m')
+    if livox['buffer_seconds'] <= livox['max_scan_duration_s']:
+        raise ValueError('livox.buffer_seconds must exceed max_scan_duration_s')
+    if livox['header_tolerance_s'] > livox['max_scan_duration_s']:
+        raise ValueError('livox.header_tolerance_s must not exceed max_scan_duration_s')
     adapter = config['adapter']
     require_keys(adapter, (*POSITIVE_ADAPTER_KEYS, *QUEUE_KEYS, 'future_tolerance',
                            'scan_relay_delay', 'voxel_size', 'publish_tf'), 'adapter')
@@ -179,15 +200,17 @@ def load_config(path):
         replay[name] = number(replay[name], 'replay.' + name, 0., True)
     for name in ('warmup_seconds', 'tail_seconds', 'drain_seconds'):
         replay[name] = number(replay[name], 'replay.' + name, 0.)
+    if replay['tail_seconds'] < livox['max_scan_duration_s'] + livox['wait_timeout_s']:
+        raise ValueError('replay.tail_seconds must cover livox.max_scan_duration_s + livox.wait_timeout_s')
     if replay['max_bag_seconds'] is not None:
         replay['max_bag_seconds'] = number(replay['max_bag_seconds'], 'replay.max_bag_seconds', 0., True)
     if type(replay['domain_id']) is not int or not 0 <= replay['domain_id'] <= 232:
         raise ValueError('replay.domain_id must be an integer from 0 to 232')
     boolean(replay['localhost_only'], 'replay.localhost_only')
     validation = config['validation']
-    require_keys(validation, ('min_gyro_messages', 'min_ndt_acceptance_ratio', 'min_ekf_messages',
+    require_keys(validation, ('scan_sample_stride', 'min_gyro_messages', 'min_ndt_acceptance_ratio', 'min_ekf_messages',
                               'max_pose_step_m', 'max_pose_gap_s', 'min_update_span_ratio'), 'validation')
-    for name in ('min_gyro_messages', 'min_ekf_messages'):
+    for name in ('scan_sample_stride', 'min_gyro_messages', 'min_ekf_messages'):
         if type(validation[name]) is not int or validation[name] < 1:
             raise ValueError('validation.' + name + ' must be a positive integer')
     for name in ('max_pose_step_m', 'max_pose_gap_s'):
@@ -202,7 +225,9 @@ def load_config(path):
                                         mount['xyz_m'], mount['rpy_rad'])
     imu_q = quaternion_multiply(quaternion_rpy(*mount['rpy_rad']), quaternion_rpy(*imu['rpy_rad']))
     config['_derived'] = {'transforms': transforms, 'initial_base_xyz': list(base_xyz),
-                          'initial_base_quaternion': list(base_q), 'imu_to_base_quaternion': list(imu_q)}
+                          'initial_base_quaternion': list(base_q), 'imu_to_base_quaternion': list(imu_q),
+                          'base_to_lidar_xyz': list(mount['xyz_m']),
+                          'base_to_lidar_quaternion': list(quaternion_rpy(*mount['rpy_rad']))}
     config['_config_file'] = str(source)
     require_keys(config['native_parameters'], ('gyro', 'ekf', 'ndt', 'map_loader'), 'native_parameters')
     native = {}
@@ -243,7 +268,8 @@ def adapter_parameters(config):
     mount = config['extrinsics']['rear_to_lidar']
     result = copy.deepcopy(config['adapter'])
     result.update({
-        'wheel_topic': topics['wheel'], 'imu_topic': topics['imu'], 'points_topic': topics['points'],
+        'wheel_topic': topics['wheel'], 'imu_topic': topics['imu'],
+        'points_topic': topics['processed_points'], 'raw_points_topic': topics['points'],
         'wheel_frame': frames['wheel'], 'imu_frame': frames['imu'], 'cloud_frame': frames['cloud'],
         'map_frame': frames['map'], 'rear_frame': frames['rear'], 'base_frame': frames['base'],
         'initial_base_xyz': config['_derived']['initial_base_xyz'],

@@ -9,6 +9,14 @@ import yaml
 from aps_bag_localization.configuration import adapter_parameters, load_config
 from aps_bag_localization.geometry import quaternion_multiply, quaternion_rpy, rotate
 
+try:
+    from launch import LaunchContext
+    from launch.utilities import perform_substitutions
+    from aps_bag_localization.fusion_launch import nodes
+    LAUNCH_AVAILABLE = True
+except ImportError:
+    LAUNCH_AVAILABLE = False
+
 
 MASTER = Path(__file__).resolve().parents[3] / 'config' / 'localization.yaml'
 
@@ -40,6 +48,8 @@ class ConfigurationTests(unittest.TestCase):
         parameters = adapter_parameters(changed)
         self.assertEqual(transform['xyz_m'], parameters['mount_xyz'])
         self.assertEqual(transform['rpy_rad'], parameters['mount_rpy'])
+        self.assertEqual(changed['_derived']['base_to_lidar_xyz'], transform['xyz_m'])
+        self.assertEqual(changed['_derived']['base_to_lidar_quaternion'], list(quaternion_rpy(*transform['rpy_rad'])))
         self.assertNotEqual(changed['_derived']['initial_base_xyz'], original['_derived']['initial_base_xyz'])
         self.assertNotEqual(changed['_derived']['imu_to_base_quaternion'], original['_derived']['imu_to_base_quaternion'])
         offset = rotate(changed['_derived']['initial_base_quaternion'], transform['xyz_m'])
@@ -59,13 +69,16 @@ class ConfigurationTests(unittest.TestCase):
     def test_custom_frames_and_topics_reach_adapter_and_native_nodes(self):
         def change(config):
             config['frames'].update(map='site_map', cloud='laser_body', imu='builtin_imu', wheel='rear_wheel')
-            config['topics'].update(wheel='/sensors/wheels', imu='/sensors/imu', points='/sensors/cloud')
+            config['topics'].update(wheel='/sensors/wheels', imu='/sensors/imu',
+                                     points='/sensors/raw_livox', processed_points='/sensors/deskewed')
         config = self.changed_config(change)
         parameters = adapter_parameters(config)
         self.assertEqual(parameters['imu_frame'], 'builtin_imu')
         self.assertEqual(parameters['cloud_frame'], 'laser_body')
         self.assertEqual(parameters['wheel_frame'], 'rear_wheel')
         self.assertEqual(parameters['wheel_topic'], '/sensors/wheels')
+        self.assertEqual(parameters['raw_points_topic'], '/sensors/raw_livox')
+        self.assertEqual(parameters['points_topic'], '/sensors/deskewed')
         self.assertEqual(config['_native_parameters']['ndt']['frame.map_frame'], 'site_map')
         self.assertEqual(config['_native_parameters']['ekf']['misc.pose_frame_id'], 'site_map')
 
@@ -89,6 +102,52 @@ class ConfigurationTests(unittest.TestCase):
     def test_historical_acquisition_replay_requires_simulated_clock(self):
         with self.assertRaisesRegex(ValueError, 'use_sim_time'):
             self.changed_config(lambda config: config['runtime'].update(use_sim_time=False))
+
+    def test_raw_livox_origin_is_independent_of_imu_chip_translation(self):
+        original = load_config(MASTER)
+        changed = self.changed_config(lambda config: config['extrinsics']['lidar_to_imu'].update(
+            xyz_m=[.3, -.4, .2]))
+        self.assertEqual(original['_derived']['base_to_lidar_xyz'], changed['_derived']['base_to_lidar_xyz'])
+        self.assertEqual(original['_derived']['base_to_lidar_quaternion'],
+                         changed['_derived']['base_to_lidar_quaternion'])
+        self.assertEqual(original['_derived']['initial_base_xyz'], changed['_derived']['initial_base_xyz'])
+        self.assertEqual(original['livox']['raw_frame'], 'livox_frame')
+        self.assertEqual(adapter_parameters(original)['cloud_frame'], original['frames']['cloud'])
+
+    def test_raw_processing_limits_and_sample_stride_are_validated(self):
+        for name in ('max_range_m', 'max_scan_duration_s', 'max_imu_gap_s', 'max_wheel_gap_s',
+                     'buffer_seconds', 'wait_timeout_s', 'header_tolerance_s'):
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                self.changed_config(lambda config: config['livox'].update({name: float('nan')}))
+        with self.assertRaisesRegex(ValueError, 'max_range_m'):
+            self.changed_config(lambda config: config['livox'].update(min_range_m=101.))
+        with self.assertRaisesRegex(ValueError, 'scan_sample_stride'):
+            self.changed_config(lambda config: config['validation'].update(scan_sample_stride=0))
+        with self.assertRaisesRegex(ValueError, 'separate topic'):
+            self.changed_config(lambda config: config['topics'].update(processed_points=config['topics']['points']))
+        with self.assertRaisesRegex(ValueError, 'tail_seconds'):
+            self.changed_config(lambda config: config['replay'].update(tail_seconds=.2))
+
+    @unittest.skipUnless(LAUNCH_AVAILABLE, 'ROS launch libraries required')
+    def test_launch_has_raw_preprocessor_in_ten_node_graph(self):
+        config = load_config(MASTER)
+        with tempfile.TemporaryDirectory() as temporary:
+            folder = Path(temporary)
+            # Construction only: the launch checks existence but does not open PCD.
+            map_path = folder / 'map.pcd'
+            map_path.write_text('unused configuration test map', encoding='utf-8')
+            config['paths']['map'] = str(map_path)
+            path = folder / 'runtime.yaml'
+            path.write_text(yaml.safe_dump(config), encoding='utf-8')
+            context = LaunchContext()
+            context.launch_configurations['config_file'] = str(path)
+            actions = nodes(context)
+            executables = [action.node_executable if isinstance(action.node_executable, str)
+                           else perform_substitutions(context, action.node_executable) for action in actions]
+            self.assertEqual(len(actions), 10)
+            self.assertEqual(executables.count('raw_livox'), 1)
+            self.assertEqual(executables.count('fusion_adapter'), 1)
+            self.assertNotIn('ndt_feedback', executables)
 
 
 if __name__ == '__main__':

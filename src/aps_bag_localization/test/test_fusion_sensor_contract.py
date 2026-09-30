@@ -31,6 +31,9 @@ class SensorContractTests(unittest.TestCase):
             node.tick()
             self.assertEqual(set(node.activation_clients), {'ekf', 'ndt'})
             self.assertFalse(node.initial_sent)
+            input_topics = {subscription.topic_name for subscription in node.subscriptions}
+            self.assertIn(node.topic_names['processed_points'], input_topics)
+            self.assertNotIn(node.topic_names['points'], input_topics)
         finally:
             if node is not None:
                 node.destroy_node()

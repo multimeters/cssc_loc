@@ -23,6 +23,7 @@ setup(
     entry_points={'console_scripts': [
         'bag_adapter = aps_bag_localization.adapter:main',
         'fusion_adapter = aps_bag_localization.fusion_adapter:main',
+        'raw_livox = aps_bag_localization.livox_node:main',
         'trajectory_recorder = aps_bag_localization.recorder:main',
     ]},
 )

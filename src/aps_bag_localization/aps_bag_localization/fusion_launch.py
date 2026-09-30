@@ -37,6 +37,10 @@ def nodes(context):
              name='pointcloud_map_loader', namespace='map', output='screen',
              parameters=[native['map_loader']], remappings=common_clock + common_diagnostics + [
                  ('service/get_differential_pcd_map', services['map_loader'])]),
+        Node(package='aps_bag_localization', executable='raw_livox', name='raw_livox_preprocessor',
+             output='screen',
+             parameters=[{'use_sim_time': sim_time, 'configuration_file': config['_config_file']}],
+             remappings=common_clock),
         Node(package='aps_bag_localization', executable='fusion_adapter', output='screen',
              parameters=[{'use_sim_time': sim_time, 'configuration_file': config['_config_file']}],
              remappings=common_clock),

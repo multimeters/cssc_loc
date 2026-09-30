@@ -1,0 +1,408 @@
+{
+  "/livox/lidar": {
+    "count": 967,
+    "frames": [
+      "livox_frame"
+    ],
+    "header": {
+      "first_ns": 1790736410920504735,
+      "last_ns": 1790736507520231734,
+      "duration_s": 96.599726999,
+      "rate_hz": 10.000028261052954,
+      "delta_s": {
+        "min": 0.092334924,
+        "max": 0.107359514,
+        "mean": 0.09999971739026915,
+        "median": 0.10000524,
+        "stddev": 0.0013036401979343065
+      },
+      "backward_steps": 0,
+      "gaps_over_100ms": 488,
+      "gaps_over_1s": 0
+    },
+    "recording": {
+      "first_ns": 1790736411023686413,
+      "last_ns": 1790736507623758496,
+      "duration_s": 96.600072083,
+      "rate_hz": 9.999992537997286,
+      "delta_s": {
+        "min": 5.8429e-05,
+        "max": 0.921818417,
+        "mean": 0.10000007462008281,
+        "median": 0.0999453095,
+        "stddev": 0.028146123802490614
+      },
+      "backward_steps": 0,
+      "gaps_over_100ms": 467,
+      "gaps_over_1s": 0
+    }
+  },
+  "/livox/imu": {
+    "count": 2304,
+    "frames": [
+      "livox_frame"
+    ],
+    "header": {
+      "first_ns": 1790736410957206916,
+      "last_ns": 1790736506317695732,
+      "duration_s": 95.360488816,
+      "rate_hz": 24.150463452884406,
+      "delta_s": {
+        "min": 1.82e-05,
+        "max": 0.706716905,
+        "mean": 0.04140707286843248,
+        "median": 0.0092233,
+        "stddev": 0.07674550570648304
+      },
+      "backward_steps": 0,
+      "gaps_over_100ms": 276,
+      "gaps_over_1s": 0
+    },
+    "recording": {
+      "first_ns": 1790736410961483589,
+      "last_ns": 1790736507592838262,
+      "duration_s": 96.631354673,
+      "rate_hz": 23.832843985198593,
+      "delta_s": {
+        "min": 4.592e-06,
+        "max": 1.073886502,
+        "mean": 0.04195890346200608,
+        "median": 0.00926075,
+        "stddev": 0.08116253737650256
+      },
+      "backward_steps": 0,
+      "gaps_over_100ms": 286,
+      "gaps_over_1s": 1
+    }
+  },
+  "/hunter_odom": {
+    "count": 4807,
+    "frames": [
+      "hunter_odom"
+    ],
+    "header": {
+      "first_ns": 1790736410654875829,
+      "last_ns": 1790736507634548492,
+      "duration_s": 96.979672663,
+      "rate_hz": 49.55677687942538,
+      "delta_s": {
+        "min": 0.01686987,
+        "max": 0.759993675,
+        "mean": 0.020178874877861006,
+        "median": 0.0199999285,
+        "stddev": 0.010818056465346858
+      },
+      "backward_steps": 0,
+      "gaps_over_100ms": 2,
+      "gaps_over_1s": 0
+    },
+    "recording": {
+      "first_ns": 1790736410655239856,
+      "last_ns": 1790736507634779322,
+      "duration_s": 96.979539466,
+      "rate_hz": 49.55684494341131,
+      "delta_s": {
+        "min": 5.28e-06,
+        "max": 0.999065671,
+        "mean": 0.020178847163129423,
+        "median": 0.019996320499999998,
+        "stddev": 0.015747186687770434
+      },
+      "backward_steps": 0,
+      "gaps_over_100ms": 3,
+      "gaps_over_1s": 0
+    }
+  },
+  "/cloud_registered_body": {
+    "count": 969,
+    "frames": [
+      "body"
+    ],
+    "header": {
+      "first_ns": 1790736409520505428,
+      "last_ns": 1790736506321407794,
+      "duration_s": 96.800902366,
+      "rate_hz": 9.999906781240883,
+      "delta_s": {
+        "min": 0.092893601,
+        "max": 0.107044936,
+        "mean": 0.10000093219628099,
+        "median": 0.09998738800000001,
+        "stddev": 0.001192366146587283
+      },
+      "backward_steps": 0,
+      "gaps_over_100ms": 471,
+      "gaps_over_1s": 0
+    },
+    "recording": {
+      "first_ns": 1790736411214742282,
+      "last_ns": 1790736507649366389,
+      "duration_s": 96.434624107,
+      "rate_hz": 10.037888455146005,
+      "delta_s": {
+        "min": 3.1806e-05,
+        "max": 0.492228519,
+        "mean": 0.09962254556508264,
+        "median": 0.056292235499999996,
+        "stddev": 0.07917484051458212
+      },
+      "backward_steps": 0,
+      "gaps_over_100ms": 338,
+      "gaps_over_1s": 0
+    }
+  },
+  "imu_coverage": {
+    "scans_missing_guard_samples": 15,
+    "scans_internal_gap_over_100ms": 721,
+    "scans_internal_gap_over_50ms": 901,
+    "max_bracket_gap_s": {
+      "min": 0.0060958060000000005,
+      "max": 0.7067169050000001,
+      "mean": 0.22098408748214288,
+      "median": 0.1755817255,
+      "stddev": 0.16223580684746114
+    },
+    "top_gaps": [
+      {
+        "start_rel_lidar_s": 69.029291046,
+        "end_rel_lidar_s": 69.736007951,
+        "gap_s": 0.7067169050000001
+      },
+      {
+        "start_rel_lidar_s": 70.410480148,
+        "end_rel_lidar_s": 71.11611164600001,
+        "gap_s": 0.705631498
+      },
+      {
+        "start_rel_lidar_s": 58.809668425000005,
+        "end_rel_lidar_s": 59.45576357,
+        "gap_s": 0.6460951450000001
+      },
+      {
+        "start_rel_lidar_s": 57.529594492,
+        "end_rel_lidar_s": 58.175551148000004,
+        "gap_s": 0.6459566560000001
+      },
+      {
+        "start_rel_lidar_s": 74.11620953,
+        "end_rel_lidar_s": 74.75624062700001,
+        "gap_s": 0.640031097
+      },
+      {
+        "start_rel_lidar_s": 4.532888197,
+        "end_rel_lidar_s": 5.132749068000001,
+        "gap_s": 0.5998608710000001
+      },
+      {
+        "start_rel_lidar_s": 3.127246936,
+        "end_rel_lidar_s": 3.7227692200000004,
+        "gap_s": 0.5955222840000001
+      },
+      {
+        "start_rel_lidar_s": 1.80715409,
+        "end_rel_lidar_s": 2.376932365,
+        "gap_s": 0.569778275
+      },
+      {
+        "start_rel_lidar_s": 56.215382863,
+        "end_rel_lidar_s": 56.779708676000006,
+        "gap_s": 0.5643258130000001
+      },
+      {
+        "start_rel_lidar_s": 67.735932163,
+        "end_rel_lidar_s": 68.300158675,
+        "gap_s": 0.5642265120000001
+      },
+      {
+        "start_rel_lidar_s": 80.770983376,
+        "end_rel_lidar_s": 81.31672237100001,
+        "gap_s": 0.545738995
+      },
+      {
+        "start_rel_lidar_s": 75.54628098900001,
+        "end_rel_lidar_s": 76.08629994500001,
+        "gap_s": 0.540018956
+      },
+      {
+        "start_rel_lidar_s": 51.555678356,
+        "end_rel_lidar_s": 52.076475727,
+        "gap_s": 0.520797371
+      },
+      {
+        "start_rel_lidar_s": 76.85633546000001,
+        "end_rel_lidar_s": 77.366456158,
+        "gap_s": 0.510120698
+      },
+      {
+        "start_rel_lidar_s": 90.08818365,
+        "end_rel_lidar_s": 90.582565402,
+        "gap_s": 0.494381752
+      }
+    ]
+  },
+  "wheel_coverage": {
+    "scans_missing_guard_samples": 0,
+    "scans_internal_gap_over_100ms": 11,
+    "scans_internal_gap_over_50ms": 11,
+    "max_bracket_gap_s": {
+      "min": 0.020000169,
+      "max": 0.759993675,
+      "mean": 0.027392870431230613,
+      "median": 0.020018542,
+      "stddev": 0.07121789662999668
+    },
+    "top_gaps": [
+      {
+        "start_rel_lidar_s": 0.79402868,
+        "end_rel_lidar_s": 1.554022355,
+        "gap_s": 0.759993675
+      },
+      {
+        "start_rel_lidar_s": 0.414023534,
+        "end_rel_lidar_s": 0.554022891,
+        "gap_s": 0.13999935700000002
+      },
+      {
+        "start_rel_lidar_s": 7.894021113000001,
+        "end_rel_lidar_s": 7.917133114,
+        "gap_s": 0.023112001
+      },
+      {
+        "start_rel_lidar_s": 57.454020886,
+        "end_rel_lidar_s": 57.477127655000004,
+        "gap_s": 0.023106769000000003
+      },
+      {
+        "start_rel_lidar_s": 19.574019887000002,
+        "end_rel_lidar_s": 19.597126321,
+        "gap_s": 0.023106434000000002
+      },
+      {
+        "start_rel_lidar_s": 31.774021782000002,
+        "end_rel_lidar_s": 31.797126713,
+        "gap_s": 0.023104931000000002
+      },
+      {
+        "start_rel_lidar_s": 57.294026543,
+        "end_rel_lidar_s": 57.317128663000005,
+        "gap_s": 0.02310212
+      },
+      {
+        "start_rel_lidar_s": 21.054023195000003,
+        "end_rel_lidar_s": 21.077122026,
+        "gap_s": 0.023098831
+      },
+      {
+        "start_rel_lidar_s": 74.61403402100001,
+        "end_rel_lidar_s": 74.637132577,
+        "gap_s": 0.023098556000000003
+      },
+      {
+        "start_rel_lidar_s": 29.554021702000004,
+        "end_rel_lidar_s": 29.577119168000003,
+        "gap_s": 0.023097466
+      },
+      {
+        "start_rel_lidar_s": 20.854030904000002,
+        "end_rel_lidar_s": 20.877125156,
+        "gap_s": 0.023094252000000003
+      },
+      {
+        "start_rel_lidar_s": 26.454030527,
+        "end_rel_lidar_s": 26.477124719000003,
+        "gap_s": 0.023094192000000003
+      },
+      {
+        "start_rel_lidar_s": 71.274029853,
+        "end_rel_lidar_s": 71.29685980000001,
+        "gap_s": 0.022829947
+      },
+      {
+        "start_rel_lidar_s": 14.134021975000001,
+        "end_rel_lidar_s": 14.15682739,
+        "gap_s": 0.022805415000000002
+      },
+      {
+        "start_rel_lidar_s": 30.614020465000003,
+        "end_rel_lidar_s": 30.636568641,
+        "gap_s": 0.022548176000000003
+      }
+    ]
+  },
+  "raw_points": {
+    "totals": {
+      "points": 19339200,
+      "nonfinite": 0,
+      "zero_xyz": 2681451,
+      "range_lt_0.5": 3328359,
+      "range_lt_1": 3329692,
+      "range_gt_100": 0
+    },
+    "offset_backwards_per_scan": {
+      "min": 118,
+      "max": 152,
+      "mean": 135.0879007238883,
+      "median": 135,
+      "stddev": 5.570413091021349
+    },
+    "frame_point_counts": {
+      "min": 18432,
+      "max": 21216,
+      "mean": 19999.172699069288,
+      "median": 19968,
+      "stddev": 274.32326841493517
+    },
+    "first_offset_ns": {
+      "min": 0,
+      "max": 0,
+      "mean": 0,
+      "median": 0,
+      "stddev": 0.0
+    },
+    "last_offset_ns": {
+      "min": 91582795,
+      "max": 107506140,
+      "mean": 100072770.2843847,
+      "median": 100220252,
+      "stddev": 1275875.733175203
+    },
+    "header_minus_timebase_ns": {
+      "min": 0,
+      "max": 0,
+      "mean": 0,
+      "median": 0,
+      "stddev": 0.0
+    },
+    "tags": {
+      "0": 18760097,
+      "1": 75545,
+      "2": 34942,
+      "4": 154475,
+      "5": 797,
+      "8": 4082,
+      "16": 37677,
+      "64": 7749,
+      "128": 63426,
+      "192": 199959,
+      "6": 247,
+      "9": 36,
+      "72": 134,
+      "10": 22,
+      "65": 12
+    },
+    "lines": {
+      "0": 4834800,
+      "1": 4834800,
+      "2": 4834800,
+      "3": 4834800
+    },
+    "first_scan_bounds_ns": [
+      1790736410920504735,
+      1790736411020664844
+    ],
+    "last_scan_bounds_ns": [
+      1790736507520231734,
+      1790736507621324531
+    ]
+  }
+}
