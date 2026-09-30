@@ -23,7 +23,7 @@ class Publisher:
 class SensorContractTests(unittest.TestCase):
     def test_real_ros_node_constructor_and_status(self):
         import rclpy
-        rclpy.init(domain_id=59)
+        rclpy.init(domain_id=68)
         node = None
         try:
             node = FusionAdapter(config_path=Path(__file__).resolve().parents[3] / 'config' / 'localization.yaml')

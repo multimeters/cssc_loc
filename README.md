@@ -4,13 +4,13 @@
 
 **默认直接使用 Livox MID-360 原始 `/livox/lidar`（`livox_ros_driver2/msg/CustomMsg`）做定位。** 原始点云经过本程序的逐点时间解码、距离与置信度过滤、轮速/IMU 运动补偿，再与 `GlobalMap_loc.pcd` 做 NDT 匹配；一键回放不读取录包中的 `/cloud_registered_body`。
 
-**所有本次定位参数均从 YAML 读取，外参只在 `config/localization.yaml` 定义一次。** 一键入口负责检查配置和数据、增量编译、启动节点、回放录包、保存结果并关闭本次启动的进程。
+**默认是常驻实时定位：直接订阅外部传感话题，不需要 bag 文件。** 所有参数从 YAML 读取，外参只在 `config/localization.yaml` 定义一次；录包验证保留为独立的 `replay` 模式。
 
 ## 一键启动
 
 ### 当前 Windows 电脑
 
-在仓库目录中，**双击 `start.cmd`** 即可启动。它自动调用 WSL 的 `Ubuntu-22.04`，不需要手动开启多个终端或逐个启动节点。
+在仓库目录中，**双击 `start.cmd`** 即可启动实时定位。它自动调用 WSL 的 `Ubuntu-22.04`；雷达和底盘驱动需要提前或随后单独启动。
 
 也可以在终端运行：
 
@@ -27,7 +27,43 @@ cd /你的路径/cssc_loc
 bash start.sh
 ```
 
-默认读取 `config/localization.yaml`，以 **0.5 倍速**回放整个指定录包。第一次需要编译，后续会增量编译；按 `Ctrl+C` 可停止。构建失败、配置错误或回放检查失败时，入口返回非零退出码，Windows 双击窗口会保留错误信息。
+默认读取 `config/localization.yaml`，按 `runtime.mode: live` 使用系统时钟，常驻等待话题及初始位姿。第一次需要编译，后续增量编译；按 `Ctrl+C` 停止本次定位节点。构建、配置或节点运行失败时返回非零退出码，Windows 双击窗口保留错误信息。
+
+录包验证改为显式启动：
+
+```bash
+bash start.sh --mode replay
+```
+
+Windows 对应 `.\start.cmd --mode replay`。此模式自动生成 `use_sim_time: true` 的配置快照，以 YAML 中的倍速回放，并在完成后退出。
+
+## 实车接入步骤
+
+1. 修改 `paths.map` 指向 PCD 地图，核查 YAML 中的外参、话题和 frame。实时模式允许 `paths.bag: null`，不会访问录包。
+2. 启动 MID-360 和底盘驱动，确保下表的三个输入持续发布；本包不负责启动硬件驱动。
+3. 运行 `bash start.sh --mode live` 或双击 `start.cmd`。
+4. RViz 的 Fixed Frame 设置为 `map`，用 **2D Pose Estimate** 在地图上给出车辆**后轮中心**位置和朝向，发布到 `/initialpose`。接收到有效初值并完成新一轮 NDT 匹配后，程序才公开定位结果。
+
+在 RViz 添加 **PointCloud2**，话题选择 `/map/output/debug/downsampled_pointcloud_map`，Durability 设为 **Transient Local**、Reliability 设为 **Reliable**，即可看到用于选取初值的地图。显示地图只发布一次并保留供后加入的订阅者读取；`config/native/map_loader.yaml` 中的 `leaf_size` 只控制这个显示副本，不改变 NDT 地图。此原生显示模块固定使用 `map` frame；若自定义 `frames.map`，需关闭该显示副本并另行提供正确 frame 的可视化地图。
+
+| 输入话题 | ROS 消息类型 | 使用内容与 frame |
+|---|---|---|
+| `/livox/lidar` | `livox_ros_driver2/msg/CustomMsg` | MID-360 原始点云，驱动标签 `livox_frame`，坐标按雷达原点解释 |
+| `/livox/imu` | `sensor_msgs/msg/Imu` | 三轴角速度，`header.frame_id: livox_frame` |
+| `/hunter_odom` | `nav_msgs/msg/Odometry` | 仅 `twist.twist.linear.x`，`child_frame_id: hunter_base_link` |
+| `/initialpose` | `geometry_msgs/msg/PoseWithCovarianceStamped` | 初始/重新定位请求，`header.frame_id: map`，pose 表示后轮中心 |
+
+实时默认 `live.initialization: topic`，不会自动套用录包的旧起点。再次发布 `/initialpose` 可重新初始化，期间暂停公开位姿并清除旧扫描，等待新定位建立。若起点固定且已核实，可改为 `live.initialization: config`，启动时使用 `initial_pose` 中的 **map → 雷达** 初值；两种初值的参考点不同，不能直接混填。
+
+`live.domain_id` 默认 `0`，`live.localhost_only` 默认 `false`。雷达驱动、底盘、RViz 与定位进程应使用相同的 `ROS_DOMAIN_ID`；不同 Domain 无法互相发现，参见 [ROS 2 官方说明](https://github.com/ros2/ros2_documentation/blob/humble/source/Concepts/Intermediate/About-Domain-ID.rst)。跨机时还需确保 DDS 网络可达；Windows/WSL 启动器不会自动配置网络、防火墙或传感器。
+
+三路传感器的时间戳必须与定位电脑的系统时间处于同一时间基准。程序不改写真实消息的时间戳：超过 `live.max_sensor_age_s` 的旧消息或超过 `live.future_tolerance_s` 的未来消息会被拒绝并计数。输入采用 best-effort、volatile 订阅，可接收兼容的 reliable/best-effort 传感发布器，见 [ROS 2 QoS 兼容规则](https://github.com/ros2/ros2_documentation/blob/humble/source/Concepts/Intermediate/About-Quality-of-Service-Settings.rst)。
+
+实时模式用 `live.motion_wait_timeout_s: 0.1` 限制等待 IMU/轮速补齐的时间，为后续匹配留出延迟余量；回放继续用 `livox.wait_timeout_s: 0.3`。这只改变等待时间，完整补偿仍必须满足同样的采样覆盖及间隔要求，否则整帧以明确标记的未补偿点云输出。
+
+短暂断流会进入降级或 `STALE` 状态，超过预测时限后停止公开位姿/TF；新鲜数据恢复后继续尝试定位。若停机期间车辆移动很远、时间发生倒退或不能重新匹配，应校准时钟并重新启动/给出初值。实时模式不发布 `/clock`，也不加载旧定位 TF；已有驱动不得同时发布另一条冲突的 `map → base_footprint` 定位链。
+
+连续 `live.ndt_idle_timeout_s` 秒没有有效 NDT 结果时，程序暂停 NDT，防止上游在没有扫描时无限积累 EKF 预测缓存；收到新的有效点云后会重新启用 NDT、清理其缓存，并等待新的预测覆盖后恢复匹配。时钟倒退时也会暂停 NDT，需在时钟稳定后重启程序。
 
 ## 首次准备
 
@@ -52,9 +88,9 @@ Windows 对应命令：
 .\start.cmd --install-deps
 ```
 
-该选项安装编译工具、Python 依赖及 rosdep 解析出的 ROS 依赖，然后继续编译和回放；需要联网，可能要求输入 Ubuntu 的 sudo 密码。已完成依赖安装后直接使用普通的一键入口。
+该选项安装编译工具、Python 依赖及 rosdep 解析出的 ROS 依赖，然后继续编译并启动选定模式；需要联网，可能要求输入 Ubuntu 的 sudo 密码。已完成依赖安装后直接使用普通的一键入口。
 
-**录包和 PCD 地图不包含在 Git 仓库中。** 默认数据目录结构如下；如果位置不同，只修改主 YAML 的 `paths.bag` 和 `paths.map`：
+**录包和 PCD 地图不包含在 Git 仓库中。** 实时定位只需要地图；仅回放验证需要录包。原始数据默认目录如下，位置不同时修改主 YAML 的 `paths.map`，回放时再设置 `paths.bag`：
 
 ```text
 同一个父目录/
@@ -86,7 +122,7 @@ YAML 中的相对路径**以该 YAML 文件所在目录为基准**，不是以�
 
 原生节点 YAML 中的 `${frames.base}` 等是本项目配置加载器的引用写法，启动时由主配置展开，避免坐标系和超时值出现多处独立设置。不要直接把含引用的原生 YAML 传给其他 ROS 启动文件。
 
-修改 YAML 后重新一键启动即可，无需修改 Python 或 launch 文件。程序在启动前检查有限数值、单位向量长度、必要坐标关系、文件路径和输入话题类型；遇到错误会直接退出。
+修改 YAML 后重新一键启动即可，无需修改 Python 或 launch 文件。程序在启动前检查有限数值、单位向量长度、必要坐标关系和文件路径；回放还会检查 bag 中的输入话题类型。实时输入的消息类型必须与上表一致，frame 和时间戳在接收时检查。
 
 ### 外参的方向与单位
 
@@ -127,11 +163,11 @@ MID360 官方手册确认内部 IMU 与点云输出三轴同向，原点有上�
 
 录包存在 IMU 缺口。只有覆盖整段扫描且相邻样本间隔满足 YAML 门限时，才进行完整去畸变；覆盖不足则整帧保留未补偿坐标供 NDT 匹配，并明确记录 `uncompensated`，不使用轮速里程计的姿态/角速度或旧定位 TF 填补。此时帧末时间戳仅表示选定的扫描参考时刻，并不表示该帧已经完成运动补偿。
 
-仓库提供与官方消息定义一致的 `livox_ros_driver2` **消息接口包**，用于反序列化和订阅 CustomMsg，不包含硬件驱动或 Livox SDK。当前一键入口完成录包定位；连接实体雷达时，需在独立驱动工作区运行官方驱动并保持消息定义一致。
+仓库提供与官方消息定义一致的 `livox_ros_driver2` **消息接口包**，用于反序列化和订阅 CustomMsg，不包含硬件驱动或 Livox SDK。连接实体雷达时，在独立驱动工作区运行官方驱动并保持消息定义一致；不要把两个同名 `livox_ros_driver2` 包放进同一源码工作区。
 
 ### 初值、地图和回放
 
-`initial_pose.reference: cloud` 表示初值是 **map → body**；`xyz_m` 为米，**这里的 `rpy_rad` 为弧度**。启动时自动用外参换算为后轮中心位姿。当前初值来自 `GlobalMap_loc.pcd` 的首帧几何配准，不是未知起点的全局重定位；换地图或录包时必须同步核查初值。
+`initial_pose.reference: cloud` 表示 YAML 初值是 **map → body**；`xyz_m` 为米，**这里的 `rpy_rad` 为弧度**。仅回放或显式 `live.initialization: config` 使用它，并用外参换算成后轮中心位姿。保存的初值来自 `GlobalMap_loc.pcd` 首帧几何配准，不是未知起点的全局重定位；换场景时应使用 `/initialpose` 或重新核查配置初值。
 
 默认回放参数位于 `replay`：倍速 `rate: 0.5`、隔离域 `domain_id: 58`、仅本机通信 `localhost_only: true`。点云输入为 `/livox/lidar`；运动输入为 `/hunter_odom` 的前向速度和 `/livox/imu` 的角速度。不消费轮速累计 pose、轮速角速度、IMU orientation 或 IMU 加速度。
 
@@ -140,14 +176,14 @@ MID360 官方手册确认内部 IMU 与点云输出三轴同向，原点有上�
 ## 常用命令
 
 ```bash
-# 仅检查配置、输入话题和环境，不编译、不回放
+# 仅检查配置、地图路径和环境，不启动节点，也不要求传感器在线
 bash start.sh --check
 
 # 使用另一份配置（外参仍只读该 YAML）
 bash start.sh --config /绝对路径/localization.yaml
 
-# 快速验证前 30 秒
-bash start.sh --max-bag-seconds 30
+# 快速验证录包前 30 秒
+bash start.sh --mode replay --max-bag-seconds 30
 
 # 已确认编译过当前代码时，跳过增量编译
 bash start.sh --no-build
@@ -160,14 +196,16 @@ Windows 将上述 `bash start.sh` 替换为 `.\start.cmd` 即可，例如：
 
 ```powershell
 .\start.cmd --check
-.\start.cmd --config "E:\配置目录\localization.yaml" --max-bag-seconds 30
+.\start.cmd --mode replay --config "E:\配置目录\localization.yaml" --max-bag-seconds 30
 ```
 
-`--rate` 和 `--max-bag-seconds` 可临时覆盖本次回放设置；有效值会写入运行快照。外参不提供第二套命令行覆盖。旧 `scripts/replay_hunter.sh` 已改为转发到同一个一键入口。
+`--mode live|replay` 可显式选择模式，并同步设置该模式的时钟；YAML 自身的 `runtime.mode` 与 `use_sim_time` 必须一致。`--rate` 和 `--max-bag-seconds` 仅用于回放；在实时模式传入会明确报错。有效配置写入运行快照。外参不提供第二套命令行覆盖。旧 `scripts/replay_hunter.sh` 仍明确启动回放模式。
 
 ## 输出和检查
 
-默认结果目录为 `artifacts/fusion/fusion-日期-时间/`（可改 `paths.output_root`），每次使用新目录：
+实时状态目录为 `artifacts/fusion/live-日期-时间/`（可改 `paths.output_root`），包括完整配置快照、原子更新的 `summary.json` 和滚动 `launch.log`。状态摘要包含最近的融合/去畸变状态、输出计数和退出原因；日志大小与备份数由 `live.log_max_bytes`、`live.log_backup_count` 控制。实时模式不会持续保存全量点云或无限增长的 CSV。
+
+录包验证目录为 `artifacts/fusion/fusion-日期-时间/`，每次使用新目录：
 
 | 文件 | 内容 |
 |---|---|
@@ -193,9 +231,9 @@ Windows 将上述 `bash start.sh` 替换为 `.\start.cmd` 即可，例如：
 | `/localization/pointcloud/deskewed` | 原始 Livox 派生 PointCloud2；是否完整补偿需结合状态话题判断 |
 | `/localization/livox/status` | 去畸变覆盖情况及过滤统计 |
 
-公开 TF 为 `map → base_footprint`。RViz 的 Fixed Frame 使用 `map`；原生 NDT 的调试 TF 已隔离，不作为正式定位结果。入口默认完成离线回放并保存结果，不自动打开 RViz。
+公开 TF 为 `map → base_footprint`。RViz 的 Fixed Frame 使用 `map`；原生 NDT 的调试 TF 已隔离，不作为正式定位结果。入口不自动打开 RViz。
 
-可生成点云/地图几何评估图：
+录包验证结束后可生成点云/地图几何评估图（不适用于实时状态目录）：
 
 ```bash
 python3 scripts/evaluate_fusion_result.py --results artifacts/fusion/某次结果目录
@@ -205,7 +243,15 @@ python3 scripts/evaluate_fusion_result.py --results artifacts/fusion/某次结�
 
 ## 已完成的验证与限制
 
-**当前原始 Livox 版本**已通过 55 项测试、34 包编译和 Windows 一键完整回放：967 帧原始 CustomMsg 全部完成转换和转发，967/967 帧输出通过原生收敛检查的 NDT 位姿；同时获得 1,747 条 gyro 融合速度及 3,661 条公开 EKF 位姿。原生 EKF 诊断确认点云位姿和轮速/IMU 速度都持续进入更新路径。10 帧本次派生点云抽样的 EKF 结果在 0.2 米内地图重合率约 96.08%，这不是独立真值定位精度。
+**本次实时版本通过 75 项自动测试和 31 项外部话题集成检查**，工作区 34 个包构建通过，最终适配包已重新构建。35 秒测试发布阶段共发送 350 帧原始 Livox 点云，观察到 345 帧预处理输出及 341 条 NDT 位姿；整轮测试包含等待初值、时间戳异常、长断流休眠/唤醒及二次初始化，共观察到 514 条 NDT、986 条 gyro 和 2,699 条公开 EKF 输出。原生诊断确认位姿和速度两路都进入 EKF 更新路径。
+
+保留的 30 秒录包回归也通过：298/298 帧 NDT、537 条 gyro、1,210 条 EKF 输出。上游 31 个包的源码锁校验无差异。结果与验证边界见 [实时定位验证报告](reports/live_localization_validation.json)。
+
+实时集成测试使用独立的测试发布器，见 `scripts/test_live_localization.py`。该脚本读取测试录包并将时间映射到当前系统时钟，定位进程自身仍只订阅话题，配置中 `paths.bag: null`。测试发布器会显式记录时钟映射变化；它不能证明真实雷达时钟同步、网络延迟或定位精度。生产实时入口 `start.sh --mode live` 不包含这些时间改写行为。
+
+此前在这台 WSL 上观察到数秒的系统时钟跳变，相关轮次因消息过期或时钟倒退而失败，未计为验证通过。最终一轮完成全部集成检查，但**尚未连接真实车辆/MID-360，也未做长时间连续运行验证**；实车部署仍需确认稳定的时钟、网络和安装标定。
+
+**此前原始 Livox 回放版本**已通过 55 项测试、34 包编译和 Windows 一键完整回放：967 帧原始 CustomMsg 全部完成转换和转发，967/967 帧输出通过原生收敛检查的 NDT 位姿；同时获得 1,747 条 gyro 融合速度及 3,661 条公开 EKF 位姿。原生 EKF 诊断确认点云位姿和轮速/IMU 速度都持续进入更新路径。10 帧本次派生点云抽样的 EKF 结果在 0.2 米内地图重合率约 96.08%，这不是独立真值定位精度。
 
 当前严格采样间隔门限下，**48 帧完成完整去畸变，919 帧因 IMU/轮速覆盖不足而整帧未补偿**，无扫描拒收。完整回放成功不意味着每帧都有足够 IMU 数据；状态与报告保留这一差异。详见 [原始 Livox 运行验证](reports/raw_livox_release_validation.json)、[点云与地图几何报告](reports/raw_livox_fusion_validation/validation.md)、[原始输入审计](reports/raw_livox_input_audit.json) 和 [原始首帧初值检查](reports/raw_livox_initial_check.json)。
 

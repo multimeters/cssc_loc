@@ -8,7 +8,28 @@ paths:
   map_metadata: null
   output_root: ../artifacts/fusion
 runtime:
-  use_sim_time: true
+  # 默认订阅实车 ROS 话题；回放命令生成 mode=replay/use_sim_time=true 的运行快照。
+  mode: live
+  use_sim_time: false
+live:
+  domain_id: 0
+  localhost_only: false
+  # topic：等待 /initialpose 中地图坐标系下的后轮中心初值；不自动采用旧 bag 初值。
+  # config：明确选择 initial_pose 中保存的地图→雷达初值。
+  initialization: topic
+  max_sensor_age_s: 0.5
+  # 实时缺少运动覆盖时，最多等到扫描结束后 0.1 秒便明确发布未补偿整帧。
+  # 不放宽 IMU/轮速采样间隔或时间戳鲜度；回放仍使用 livox.wait_timeout_s。
+  motion_wait_timeout_s: 0.1
+  # 长时间没有有效 NDT 结果时暂停 NDT；新点云到达后唤醒并清空旧先验缓存。
+  # 使用单调墙钟计时；持续坏点云也会按此间隔重置，防止上游先验无限积累。
+  ndt_idle_timeout_s: 5.0
+  future_tolerance_s: 0.1
+  initial_pose_ack_position_m: 0.05
+  initial_pose_ack_angle_rad: 0.05
+  status_period_s: 2.0
+  log_max_bytes: 10485760
+  log_backup_count: 3
 replay:
   rate: 0.5
   domain_id: 58
@@ -37,6 +58,7 @@ topics:
   imu_base: /localization/input/imu
   ndt_points: /localization/ndt/input_points
   initial_pose: /localization/initialpose
+  initial_pose_input: /initialpose
   odometry: /localization/kinematic_state
   pose: /localization/pose_with_covariance
   ndt_pose: /localization/pose_estimator/pose_with_covariance

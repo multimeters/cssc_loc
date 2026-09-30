@@ -66,9 +66,11 @@ def arguments():
     p.add_argument('--check', action='store_true', help='只校验配置与数据，不启动ROS或回放')
     args = p.parse_args()
     try:
-        cfg = load_config(args.config)
+        cfg = load_config(args.config, mode='replay')
     except (ValueError, KeyError, OSError, TypeError, yaml.YAMLError) as error:
         p.error('配置读取失败：'+str(error))
+    if not cfg['paths']['bag']:
+        p.error('回放模式需要 paths.bag；实时模式不需要录包')
     args.bag, args.map = Path(cfg['paths']['bag']), Path(cfg['paths']['map'])
     if args.output is None:
         args.output = Path(cfg['paths']['output_root'])/('fusion-'+datetime.now().strftime('%Y%m%d-%H%M%S-%f'))

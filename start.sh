@@ -14,12 +14,14 @@ for arg in "$@"; do
     --check) CHECK_ONLY=true; RUN_ARGS+=("$arg") ;;
     -h|--help)
       cat <<'HELP'
-中文说明：默认读取 config/localization.yaml，检查数据，增量编译，启动定位并回放。
-  bash start.sh                       一键启动
+中文说明：默认读取 config/localization.yaml，增量编译并按 runtime.mode 启动；默认实时订阅。
+  bash start.sh                       一键实时定位，等待传感话题和 /initialpose
+  bash start.sh --mode live           明确启动实时模式，不读取 bag
+  bash start.sh --mode replay         回放录包验证，使用仿真时钟
   bash start.sh --install-deps        首次安装依赖后启动（需要 sudo）
   bash start.sh --check               仅检查配置、数据和运行环境
   bash start.sh --config /path/x.yaml 使用指定配置（相对数据路径以 YAML 所在目录为准）
-  bash start.sh --max-bag-seconds 30   仅回放前 30 秒
+  bash start.sh --mode replay --max-bag-seconds 30   仅回放前 30 秒
   bash start.sh --no-build            使用当前目录已经编译的版本
   bash start.sh --output /new/result  指定新的结果目录
 外参只从 YAML 读取；不要回放原包的旧定位 TF。
@@ -45,7 +47,7 @@ if ! command -v colcon >/dev/null 2>&1; then
   exit 2
 fi
 # Validate data before spending time compiling. This does not launch any node.
-python3 "$ROOT_DIR/scripts/run_fusion_replay.py" "${RUN_ARGS[@]}" --check
+python3 "$ROOT_DIR/scripts/run_localization.py" "${RUN_ARGS[@]}" --check
 if "$CHECK_ONLY"; then
   echo "检查通过。构建缓存：$BUILD_ROOT"
   exit 0
@@ -59,5 +61,5 @@ if [[ ! -f "$BUILD_ROOT/install/setup.bash" ]]; then
   exit 2
 fi
 source "$BUILD_ROOT/install/setup.bash"
-echo '开始定位回放；按 Ctrl+C 可停止，结果保存到 YAML 中指定的 output_root。'
-exec python3 "$ROOT_DIR/scripts/run_fusion_replay.py" "${RUN_ARGS[@]}"
+echo '开始定位；按 Ctrl+C 可停止，状态保存到 YAML 中指定的 output_root。'
+exec python3 "$ROOT_DIR/scripts/run_localization.py" "${RUN_ARGS[@]}"

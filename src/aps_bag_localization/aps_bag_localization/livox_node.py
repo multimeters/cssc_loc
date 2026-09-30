@@ -47,6 +47,12 @@ class RawLivoxNode(Node):
             raise ValueError('configuration_file is required')
         self.config = load_config(config_path)
         self.settings = self.config['livox']
+        self.live_mode = self.config['runtime']['mode'] == 'live'
+        self.live_settings = self.config['live']
+        self.motion_wait_timeout_s = (self.live_settings['motion_wait_timeout_s'] if self.live_mode
+                                      else self.settings['wait_timeout_s'])
+        self.clock_last_ns = None
+        self.clock_error = False
         self.topics, self.frames = self.config['topics'], self.config['frames']
         self.set_parameters([Parameter('use_sim_time', value=self.config['runtime']['use_sim_time'])])
         self.rotation_imu_base = quaternion_matrix(self.config['_derived']['imu_to_base_quaternion'])
@@ -77,6 +83,9 @@ class RawLivoxNode(Node):
                                'reported uncorrected whole scans.')
 
     def _append_motion(self, buffer, stamp, values):
+        if self.live_mode and not self.fresh_live_stamp(stamp):
+            self.counts['motion_rejected'] += 1
+            return
         if stamp <= 0 or not all(math.isfinite(v) for v in values) or (buffer and stamp <= buffer[-1][0]):
             self.counts['motion_rejected'] += 1
             return
@@ -106,6 +115,9 @@ class RawLivoxNode(Node):
         self.counts['cloud_received'] += 1
         try:
             scan = parse_scan(message, self.settings)
+            if self.live_mode and (not self.fresh_live_stamp(scan.start_ns)
+                                   or not self.fresh_live_stamp(scan.end_ns)):
+                raise ValueError(self.last_rejection)
             if self.last_raw_end is not None and scan.end_ns <= self.last_raw_end:
                 raise ValueError('scan end timestamps are not strictly increasing')
             self.last_raw_end = scan.end_ns
@@ -123,9 +135,17 @@ class RawLivoxNode(Node):
             self.last_rejection = 'pending_queue_limit'
 
     def tick(self):
+        now_ns = self.current_time_ns()
+        if self.clock_error:
+            self.pending.clear()
+            return
         while self.pending:
             scan = self.pending[0]
-            now_ns = self.get_clock().now().nanoseconds
+            if self.live_mode and (now_ns-scan.end_ns)*1e-9 > self.live_settings['max_sensor_age_s']:
+                self.pending.popleft()
+                self.counts['cloud_rejected'] += 1
+                self.last_rejection = 'stale_pending_cloud_stamp'
+                continue
             if now_ns < scan.end_ns:
                 return
             try:
@@ -133,7 +153,7 @@ class RawLivoxNode(Node):
                     self.lidar_origin_base, self.settings['max_imu_gap_s'], self.settings['max_wheel_gap_s'])
                 reason = ''
             except IncompleteMotion as error:
-                if not fallback_due(scan.end_ns, now_ns, self.settings['wait_timeout_s'],
+                if not fallback_due(scan.end_ns, now_ns, self.motion_wait_timeout_s,
                                     self.imu[-1][0] if self.imu else None,
                                     self.wheel[-1][0] if self.wheel else None):
                     return
@@ -142,6 +162,27 @@ class RawLivoxNode(Node):
                 xyz, reason = scan.xyz, 'invalid_motion:' + str(error)
             self.pending.popleft()
             self._publish(scan, xyz, reason)
+
+    def current_time_ns(self):
+        now = self.get_clock().now().nanoseconds
+        if self.clock_last_ns is not None and now < self.clock_last_ns:
+            self.clock_error = True
+            self.last_rejection = 'clock_reversed_restart_required'
+        self.clock_last_ns = now
+        return now
+
+    def fresh_live_stamp(self, stamp):
+        now = self.current_time_ns()
+        if self.clock_error:
+            return False
+        age = (now-stamp)*1e-9
+        if age > self.live_settings['max_sensor_age_s']:
+            self.last_rejection = 'stale_sensor_stamp'
+            return False
+        if age < -self.live_settings['future_tolerance_s']:
+            self.last_rejection = 'future_sensor_stamp'
+            return False
+        return True
 
     def _publish(self, scan, xyz, fallback_reason):
         self.publisher.publish(make_cloud(scan, xyz, self.frames['cloud']))
@@ -156,8 +197,11 @@ class RawLivoxNode(Node):
 
     def publish_status(self):
         data = {'node': 'aps_raw_livox', 'raw_topic': self.topics['points'],
+                'runtime_mode': self.config['runtime']['mode'],
+                'mode': 'CLOCK_REVERSED_RESTART_REQUIRED' if self.clock_error else 'RUNNING',
                 'output_topic': self.topics['processed_points'], 'output_frame': self.frames['cloud'],
                 'reference': 'scan_end', 'fallback_policy': 'whole_scan_uncorrected_with_nominal_end_header',
+                'motion_wait_timeout_s': self.motion_wait_timeout_s,
                 'counts': self.counts, 'pending': len(self.pending),
                 'fallback_reasons': dict(self.fallback_reasons), 'last_scan': self.last_scan,
                 'last_rejection': self.last_rejection}

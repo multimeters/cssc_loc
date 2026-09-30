@@ -2,18 +2,31 @@
 from pathlib import Path
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.actions import DeclareLaunchArgument, EmitEvent, OpaqueFunction, RegisterEventHandler
+from launch.event_handlers import OnProcessExit
+from launch.events import Shutdown
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 from .configuration import load_config
 
 
-def nodes(context):
+def shutdown_on_required_process_exit(event, context):
+    """A missing native node or adapter invalidates the entire estimator graph."""
+    if context.is_shutdown:
+        return []
+    return [EmitEvent(event=Shutdown(
+        reason='Required localization process exited: {} (code {})'.format(event.process_name, event.returncode)))]
+
+
+def nodes(context, required_mode=None):
     path = LaunchConfiguration('config_file').perform(context)
     if not Path(path).is_absolute():
         raise ValueError('config_file must be an absolute path to the runtime YAML')
     config = load_config(path)
+    if required_mode is not None and config['runtime']['mode'] != required_mode:
+        raise ValueError('This launch requires runtime.mode=' + required_mode +
+                         '; use a consistently resolved runtime snapshot')
     paths, topics, services = config['paths'], config['topics'], config['services']
     native = config['_native_parameters']
     sim_time = config['runtime']['use_sim_time']
@@ -72,11 +85,25 @@ def nodes(context):
                  ('/tf', topics['ndt_tf']),
              ]),
     ]
-    return actions
+    # Register before launching so even an immediate child exit shuts down peers.
+    watchdogs = [RegisterEventHandler(OnProcessExit(target_action=action,
+                                                   on_exit=shutdown_on_required_process_exit))
+                 for action in actions]
+    return watchdogs + actions
+
+
+def _description(required_mode=None):
+    return LaunchDescription([
+        DeclareLaunchArgument('config_file', description='Absolute path to config/localization.yaml or a resolved run snapshot'),
+        OpaqueFunction(function=nodes, kwargs={'required_mode': required_mode}),
+    ])
 
 
 def generate_launch_description():
-    return LaunchDescription([
-        DeclareLaunchArgument('config_file', description='Absolute path to config/localization.yaml or a resolved run snapshot'),
-        OpaqueFunction(function=nodes),
-    ])
+    """Generic launch follows the serialized live/replay mode in the YAML."""
+    return _description()
+
+
+def generate_replay_launch_description():
+    """Replay entry point rejects an accidentally supplied live configuration."""
+    return _description('replay')

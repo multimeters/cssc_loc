@@ -1,7 +1,10 @@
 import copy
 import math
 from pathlib import Path
+from types import SimpleNamespace
+import sys
 import tempfile
+import time
 import unittest
 
 import yaml
@@ -10,9 +13,13 @@ from aps_bag_localization.configuration import adapter_parameters, load_config
 from aps_bag_localization.geometry import quaternion_multiply, quaternion_rpy, rotate
 
 try:
-    from launch import LaunchContext
+    from launch import LaunchContext, LaunchDescription, LaunchService
+    from launch.actions import ExecuteProcess, RegisterEventHandler
+    from launch.event_handlers import OnProcessExit
+    from launch.events import Shutdown
     from launch.utilities import perform_substitutions
-    from aps_bag_localization.fusion_launch import nodes
+    from launch_ros.actions import Node
+    from aps_bag_localization.fusion_launch import nodes, shutdown_on_required_process_exit
     LAUNCH_AVAILABLE = True
 except ImportError:
     LAUNCH_AVAILABLE = False
@@ -22,16 +29,16 @@ MASTER = Path(__file__).resolve().parents[3] / 'config' / 'localization.yaml'
 
 
 class ConfigurationTests(unittest.TestCase):
-    def changed_config(self, change):
+    def changed_config(self, change, mode=None):
         config = load_config(MASTER)
         change(config)
         with tempfile.TemporaryDirectory() as temporary:
             target = Path(temporary) / 'localization.yaml'
             target.write_text(yaml.safe_dump(config), encoding='utf-8')
-            return load_config(target)
+            return load_config(target, mode=mode)
 
     def test_full01_parameters_and_relative_paths_are_preserved(self):
-        config = load_config(MASTER)
+        config = load_config(MASTER, mode='replay')
         self.assertTrue(Path(config['paths']['map']).is_absolute())
         self.assertEqual(Path(config['paths']['map']).name, 'GlobalMap_loc.pcd')
         self.assertEqual(config['_native_parameters']['ndt']['ndt.num_threads'], 4)
@@ -100,8 +107,55 @@ class ConfigurationTests(unittest.TestCase):
         self.assertLess(config['_derived']['initial_base_xyz'][0], 4.)
 
     def test_historical_acquisition_replay_requires_simulated_clock(self):
+        config = load_config(MASTER, mode='replay')
+        self.assertEqual(config['runtime'], {'mode': 'replay', 'use_sim_time': True})
+        self.assertTrue(all(params['use_sim_time'] for params in config['_native_parameters'].values()))
         with self.assertRaisesRegex(ValueError, 'use_sim_time'):
-            self.changed_config(lambda config: config['runtime'].update(use_sim_time=False))
+            self.changed_config(lambda config: config['runtime'].update(use_sim_time=True))
+
+    def test_live_defaults_wait_for_topic_and_need_no_bag(self):
+        config = self.changed_config(lambda config: config['paths'].update(bag=None))
+        self.assertIsNone(config['paths']['bag'])
+        self.assertEqual(config['runtime'], {'mode': 'live', 'use_sim_time': False})
+        self.assertFalse(any(params['use_sim_time'] for params in config['_native_parameters'].values()))
+        parameters = adapter_parameters(config)
+        self.assertEqual(parameters['initialization'], 'topic')
+        self.assertEqual(parameters['initial_pose_input_topic'], '/initialpose')
+        self.assertFalse(config['live']['localhost_only'])
+
+    def test_live_configuration_initialization_is_explicit(self):
+        config = self.changed_config(lambda config: config['live'].update(initialization='config'))
+        self.assertEqual(adapter_parameters(config)['initialization'], 'config')
+        with self.assertRaisesRegex(ValueError, 'initialization'):
+            self.changed_config(lambda config: config['live'].update(initialization='automatic'))
+        with self.assertRaisesRegex(ValueError, 'initial_pose_input'):
+            self.changed_config(lambda config: config['topics'].update(initial_pose_input=config['topics']['initial_pose']))
+
+    def test_mode_override_and_serialized_roundtrip_keep_native_clocks_consistent(self):
+        config = load_config(MASTER, mode='replay')
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / 'replay.yaml'
+            path.write_text(yaml.safe_dump(config), encoding='utf-8')
+            replay = load_config(path)
+            live = load_config(path, mode='live')
+        self.assertTrue(replay['runtime']['use_sim_time'])
+        self.assertEqual(adapter_parameters(replay)['initialization'], 'config')
+        self.assertFalse(live['runtime']['use_sim_time'])
+        self.assertFalse(any(params['use_sim_time'] for params in live['_native_parameters'].values()))
+        self.assertEqual(replay['_derived']['transforms'], live['_derived']['transforms'])
+        with self.assertRaisesRegex(ValueError, 'override'):
+            load_config(MASTER, mode='invalid')
+
+    def test_live_age_and_log_settings_are_validated(self):
+        for name, value in (('max_sensor_age_s', 0.), ('future_tolerance_s', -.1),
+                            ('initial_pose_ack_position_m', 0.), ('initial_pose_ack_angle_rad', -.05),
+                            ('ndt_idle_timeout_s', 0.), ('ndt_idle_timeout_s', .5),
+                            ('motion_wait_timeout_s', 0.), ('motion_wait_timeout_s', .5),
+                            ('motion_wait_timeout_s', .6),
+                            ('status_period_s', float('inf')), ('log_max_bytes', 0),
+                            ('log_backup_count', 1.5), ('domain_id', -1)):
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                self.changed_config(lambda config: config['live'].update({name: value}))
 
     def test_raw_livox_origin_is_independent_of_imu_chip_translation(self):
         original = load_config(MASTER)
@@ -125,8 +179,10 @@ class ConfigurationTests(unittest.TestCase):
             self.changed_config(lambda config: config['validation'].update(scan_sample_stride=0))
         with self.assertRaisesRegex(ValueError, 'separate topic'):
             self.changed_config(lambda config: config['topics'].update(processed_points=config['topics']['points']))
+        config = self.changed_config(lambda config: config['replay'].update(tail_seconds=.2))
+        self.assertEqual(config['runtime']['mode'], 'live')
         with self.assertRaisesRegex(ValueError, 'tail_seconds'):
-            self.changed_config(lambda config: config['replay'].update(tail_seconds=.2))
+            self.changed_config(lambda config: config['replay'].update(tail_seconds=.2), mode='replay')
 
     @unittest.skipUnless(LAUNCH_AVAILABLE, 'ROS launch libraries required')
     def test_launch_has_raw_preprocessor_in_ten_node_graph(self):
@@ -142,12 +198,41 @@ class ConfigurationTests(unittest.TestCase):
             context = LaunchContext()
             context.launch_configurations['config_file'] = str(path)
             actions = nodes(context)
+            process_actions = [action for action in actions if isinstance(action, Node)]
+            watchdogs = [action for action in actions if isinstance(action, RegisterEventHandler)]
             executables = [action.node_executable if isinstance(action.node_executable, str)
-                           else perform_substitutions(context, action.node_executable) for action in actions]
-            self.assertEqual(len(actions), 10)
+                           else perform_substitutions(context, action.node_executable) for action in process_actions]
+            self.assertEqual(len(process_actions), 10)
+            self.assertEqual(len(watchdogs), 10)
             self.assertEqual(executables.count('raw_livox'), 1)
             self.assertEqual(executables.count('fusion_adapter'), 1)
             self.assertNotIn('ndt_feedback', executables)
+            with self.assertRaisesRegex(ValueError, 'requires runtime.mode=replay'):
+                nodes(context, required_mode='replay')
+            config['runtime'].update(mode='replay', use_sim_time=True)
+            path.write_text(yaml.safe_dump(config), encoding='utf-8')
+            self.assertEqual(len(nodes(context, required_mode='replay')), 20)
+
+    @unittest.skipUnless(LAUNCH_AVAILABLE, 'ROS launch libraries required')
+    def test_required_child_exit_requests_graph_shutdown(self):
+        event = SimpleNamespace(process_name='native_ndt', returncode=7)
+        emitted = shutdown_on_required_process_exit(event, SimpleNamespace(is_shutdown=False))
+        self.assertEqual(len(emitted), 1)
+        self.assertIsInstance(emitted[0].event, Shutdown)
+        self.assertIn('native_ndt', emitted[0].event.reason)
+        self.assertEqual(shutdown_on_required_process_exit(event, SimpleNamespace(is_shutdown=True)), [])
+
+    @unittest.skipUnless(LAUNCH_AVAILABLE, 'ROS launch libraries required')
+    def test_failed_process_stops_its_running_peer(self):
+        failed = ExecuteProcess(cmd=[sys.executable, '-c', 'import time,sys; time.sleep(.2); sys.exit(7)'])
+        peer = ExecuteProcess(cmd=[sys.executable, '-c', 'import time; time.sleep(30)'])
+        watchdog = RegisterEventHandler(OnProcessExit(target_action=failed,
+                                                      on_exit=shutdown_on_required_process_exit))
+        service = LaunchService(argv=[])
+        service.include_launch_description(LaunchDescription([watchdog, peer, failed]))
+        started = time.monotonic()
+        service.run()
+        self.assertLess(time.monotonic() - started, 5.)
 
 
 if __name__ == '__main__':

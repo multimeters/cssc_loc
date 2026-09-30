@@ -136,7 +136,7 @@ try {
     Write-Host ('正在启动定位工具（WSL：' + $distributionName + '）')
     Write-Host ('仓库目录：' + $launcherDirectory)
     if ($runnerArguments -contains '--check') {
-        Write-Host '本次只检查配置与环境，不回放数据。'
+        Write-Host '本次只检查配置与环境，不启动定位节点。'
     }
     $launchArguments = @('--distribution', $distributionName, '--exec', 'bash', '--', ($linuxDirectory + '/start.sh')) + $forwarded.ToArray()
     $launcherExitCode = Invoke-WslProcess -Arguments $launchArguments

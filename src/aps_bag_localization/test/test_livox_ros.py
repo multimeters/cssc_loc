@@ -2,6 +2,7 @@
 from pathlib import Path
 import sqlite3
 import sys
+import tempfile
 import unittest
 
 # Exercise source edits even when an older package exists in the sourced overlay.
@@ -13,6 +14,7 @@ from livox_ros_driver2.msg import CustomMsg, CustomPoint
 from rclpy.serialization import deserialize_message, serialize_message
 from rclpy.time import Time
 from sensor_msgs.msg import PointField
+import yaml
 
 from aps_bag_localization.configuration import load_config
 from aps_bag_localization.livox_deskew import parse_scan
@@ -44,11 +46,15 @@ def synthetic_message():
 class LivoxRosTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        rclpy.init()
-        cls.config = load_config(MASTER)
+        rclpy.init(domain_id=68)
+        cls.config = load_config(MASTER, mode='replay')
+        cls.temporary = tempfile.TemporaryDirectory()
+        cls.config_path = Path(cls.temporary.name) / 'replay.yaml'
+        cls.config_path.write_text(yaml.safe_dump(cls.config), encoding='utf-8')
 
     @classmethod
     def tearDownClass(cls):
+        cls.temporary.cleanup()
         rclpy.shutdown()
 
     def test_generated_custommsg_roundtrip_and_output_fields(self):
@@ -65,8 +71,10 @@ class LivoxRosTests(unittest.TestCase):
                                       [[2., 1., .5, 200.], [3., 1., .5, 255.]])
 
     def test_real_node_holds_until_scan_end_and_reports_whole_scan_fallback(self):
-        node = RawLivoxNode(str(MASTER))
+        node = RawLivoxNode(str(self.config_path))
         try:
+            self.assertEqual(node.motion_wait_timeout_s, node.settings['wait_timeout_s'])
+            self.assertGreater(node.motion_wait_timeout_s, node.live_settings['motion_wait_timeout_s'])
             node.publisher, node.status_publisher = Collector(), Collector()
             raw = synthetic_message()
             node.on_cloud(raw)

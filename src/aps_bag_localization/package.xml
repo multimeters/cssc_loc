@@ -2,7 +2,7 @@
 <package format="3">
   <name>aps_bag_localization</name>
   <version>0.1.0</version>
-  <description>Native Autoware wheel/IMU, gyro odometer, NDT and EKF map fusion replay.</description>
+  <description>Live and replay localization with native Autoware wheel/IMU, gyro odometer, NDT and EKF map fusion.</description>
   <maintainer email="maintainers@example.com">APS localization maintainers</maintainer>
   <license>Apache-2.0</license>
   <buildtool_depend>python3-setuptools</buildtool_depend>

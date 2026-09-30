@@ -1,0 +1,207 @@
+{
+  "status": "passed_software_and_external_topic_integration",
+  "hardware_live_verified": false,
+  "ground_truth_accuracy_verified": false,
+  "config": "config/localization.yaml",
+  "build": {
+    "workspace_packages": 34,
+    "full_workspace_build_passed": true,
+    "final_adapter_rebuild_passed": true,
+    "source_lock_packages_checked": 31,
+    "source_lock_mismatches": []
+  },
+  "unit_tests": {
+    "passed": 75,
+    "failed": 0,
+    "skipped": 0,
+    "paths": [
+      "src/aps_bag_localization/test",
+      "src/aps_ndt_localization/test"
+    ]
+  },
+  "live": {
+    "status": "passed",
+    "verification_run": "artifacts/live-final-06",
+    "command": "python3 scripts/test_live_localization.py --output artifacts/live-final-06",
+    "ros_domain_id": 67,
+    "bag_in_live_config": null,
+    "test_publisher_only_rebases_timestamps": true,
+    "fixed_epoch_delta": false,
+    "time_mapping_note": "WSL can step CLOCK_REALTIME relative to monotonic time. This TEST publisher records and follows that epoch offset without changing the host clock or live freshness thresholds. Hardware clock stability and original network latency are not verified.",
+    "production_sensor_timestamps_modified": false,
+    "clock_published": false,
+    "check_count": 31,
+    "checks": {
+      "live_started_with_no_bag": true,
+      "no_clock_publisher_at_start": true,
+      "no_old_processed_cloud_subscription": true,
+      "private_tf_helpers_do_not_subscribe_clock": true,
+      "every_graph_node_uses_wall_clock": true,
+      "raw_imu_wheel_topic_types": true,
+      "external_publisher_is_only_sensor_source": true,
+      "rviz_map_received_by_late_joiner": true,
+      "sensors_received_before_initial_pose": true,
+      "no_public_or_ndt_pose_before_initial_pose": true,
+      "main_live_processed_cloud_coverage": true,
+      "main_live_ndt_coverage": true,
+      "raw_ndt_gyro_and_public_ekf_active": true,
+      "both_native_ekf_update_routes": true,
+      "bad_raw_timestamps_do_not_produce_clouds": true,
+      "fusion_reports_timestamp_rejections": true,
+      "preprocessing_reports_timestamp_rejections": true,
+      "recovers_after_bad_timestamps_without_reset": true,
+      "sensor_dropout_reports_stale": true,
+      "public_pose_stops_after_sensor_dropout": true,
+      "live_process_persists_during_dropout": true,
+      "ndt_sleeps_during_long_dropout": true,
+      "public_pose_resumes_after_fresh_sensors": true,
+      "ndt_wakes_and_matches_after_long_dropout": true,
+      "outputs_after_second_initial_pose": true,
+      "second_initial_pose_acknowledged": true,
+      "reset_output_returns_near_requested_seed": true,
+      "no_clock_publisher_at_end": true,
+      "output_epoch_matches_current_wall_clock": true,
+      "live_runs_until_explicit_stop": true,
+      "live_runner_confirms_no_bag_or_clock": true
+    },
+    "inputs": {
+      "/hunter_odom": [
+        "nav_msgs/msg/Odometry"
+      ],
+      "/livox/imu": [
+        "sensor_msgs/msg/Imu"
+      ],
+      "/livox/lidar": [
+        "livox_ros_driver2/msg/CustomMsg"
+      ]
+    },
+    "graph_use_sim_time": {
+      "/cssc_live_external_test_publisher": false,
+      "/cssc_live_monitor": false,
+      "/localization/pose_twist_fusion_filter/ekf_localizer": false,
+      "/localization/twist_estimator/gyro_odometer": false,
+      "/lidar_to_cloud": false,
+      "/lidar_to_imu": false,
+      "/localization/pose_estimator/ndt_scan_matcher": false,
+      "/map/pointcloud_map_loader": false,
+      "/raw_livox_preprocessor": false,
+      "/rear_to_base": false,
+      "/rear_to_lidar": false
+    },
+    "total_outputs": {
+      "processed": 554,
+      "gyro": 986,
+      "ekf": 2699,
+      "ndt": 514
+    },
+    "main_35_seconds": {
+      "inputs": {
+        "/hunter_odom": 1751,
+        "/livox/imu": 761,
+        "/livox/lidar": 350
+      },
+      "outputs": {
+        "processed": 345,
+        "gyro": 659,
+        "ekf": 1712,
+        "ndt": 341
+      },
+      "header_age_at_publish_s": {
+        "count": 2862,
+        "min": 0.000154894,
+        "max": 0.19881878900000002,
+        "median": 0.043104058,
+        "p95": 0.18502351315
+      },
+      "wall_elapsed_s": 38.198470535000006,
+      "monotonic_elapsed_s": 35.15204177099997
+    },
+    "native_ekf_passed_update_cycles": {
+      "twist": 818,
+      "pose": 2499
+    },
+    "ndt_idle_sleeps": 1,
+    "ndt_wakeups": 1,
+    "epoch_mapping_shifts": [
+      {
+        "phase": "initialized",
+        "wall_ns": 1790753515165013938,
+        "change_since_previous_s": 3.046430855,
+        "change_since_phase_start_s": 3.046430855
+      }
+    ],
+    "owned_live_process_returncode": 0
+  },
+  "replay_regression": {
+    "verification_run": "artifacts/fusion/live-replay-regression-01",
+    "command": "bash start.sh --mode replay --no-build --max-bag-seconds 30 --output artifacts/fusion/live-replay-regression-01",
+    "duration_seconds": 30,
+    "status": "partial",
+    "full_bag_completed": false,
+    "estimator_checks_passed": true,
+    "input_messages_published": {
+      "/hunter_odom": 1458,
+      "/livox/lidar": 298,
+      "/livox/imu": 790
+    },
+    "ndt_count": 298,
+    "gyro_count": 537,
+    "ekf_count": 1210,
+    "ndt_accepted_to_published_ratio": 1.0,
+    "preprocessing_counts": {
+      "cloud_received": 298,
+      "cloud_published": 298,
+      "fully_deskewed": 12,
+      "uncompensated": 286,
+      "cloud_rejected": 0,
+      "imu_received": 790,
+      "wheel_received": 1458,
+      "motion_rejected": 0,
+      "points_input": 5959584,
+      "points_rejected": 1060736,
+      "points_published": 4898848
+    },
+    "ekf_update_evidence": {
+      "pose": {
+        "diagnostic_samples": 1375,
+        "cycles_with_queued_measurements": 989,
+        "native_reported_update_cycles": 989,
+        "successful_cycle_span_s": 29.983284839,
+        "max_successful_cycle_gap_s": 0.36,
+        "note": "Native update path, with repeated smoothing cycles; not unique message count."
+      },
+      "twist": {
+        "diagnostic_samples": 1375,
+        "cycles_with_queued_measurements": 577,
+        "native_reported_update_cycles": 577,
+        "successful_cycle_span_s": 29.702906544,
+        "max_successful_cycle_gap_s": 0.834871202,
+        "note": "Native update path, with repeated smoothing cycles; not unique message count."
+      }
+    },
+    "note": "The replay regression preceded the live-only motion wait change; final unit tests verify replay retains its original 0.3-second wait."
+  },
+  "limitations": [
+    "Live integration uses an independent publisher of recorded sensor measurements, with test-only header/timebase mapping to current wall time; it does not reproduce hardware clock synchronization or network delays.",
+    "Earlier WSL runs observed wall-clock steps (about -4.21, -4.88 and +4.84 seconds) and correctly failed freshness or clock-reversal guards. Their failed coverage results were not counted as passed validation.",
+    "Final live run passes the configured coverage and lifecycle assertions; this is not a continuous multi-hour stability, physical calibration or absolute-position accuracy result.",
+    "No real vehicle or Livox hardware was connected for this release test. The mounting pitch remains provisional and requires physical validation."
+  ],
+  "sha256": {
+    "config/localization.yaml": "4cd4be56420088d6f1aac5f34fe839e308b9f6c963719cbf5f8147ba011ccbaf",
+    "config/native/map_loader.yaml": "aafb70ddce1d8a3ea6f8cd1e2ed1e4c5acd982cf6b6f69ad84b18a74f58f107d",
+    "scripts/run_live_localization.py": "e8a43033261c612ee35d85f064c2f20a10d78970fbc8fac8892f9d31713c131a",
+    "scripts/run_localization.py": "29178d306444f37fb00352dce388d998283b1a4ade0e4ccbfd58355536779893",
+    "scripts/test_live_localization.py": "2dc28da87ce4da7f19d1485129ed29a012fd12b7b60ad733cc475cf74ae5eca6",
+    "src/aps_bag_localization/aps_bag_localization/configuration.py": "df30aa23733ac88b860d53cf690648ac4b7d42b18b4e1a895d9abf6b04f68496",
+    "src/aps_bag_localization/aps_bag_localization/fusion_adapter.py": "7a8803a0e8f7ee27bfd3ec38c7f31e7e4e8b7c0849d49460fab76874a32b3097",
+    "src/aps_bag_localization/aps_bag_localization/livox_node.py": "8876bdc88067c2e3021db4b449b91679c305b702678417327784fb610671763a",
+    "src/aps_bag_localization/aps_bag_localization/fusion_launch.py": "2bdb3fb13c812b89f070a5cd4dd36c91cd9c2ba18deb2b4f7995edc65e7582b7"
+  },
+  "windows_entry_check": {
+    "command": "start.cmd --check",
+    "exit_code": 0,
+    "mode": "live",
+    "bag_required": false
+  }
+}

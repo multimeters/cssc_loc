@@ -9,6 +9,7 @@ import json
 import math
 import time
 
+import numpy as np
 import rclpy
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
 from geometry_msgs.msg import PoseWithCovarianceStamped, TransformStamped, TwistWithCovarianceStamped
@@ -43,12 +44,14 @@ class FusionAdapter(Node):
         config = load_config(config_path)
         self.config_path = config['_config_file']
         self.p = adapter_parameters(config)
+        self.live_mode = self.p['runtime_mode'] == 'live'
         self.topic_names = config['topics']
         self.service_names = config['services']
         self.set_parameters([Parameter('use_sim_time', value=config['runtime']['use_sim_time'])])
         self.latest = {}
         self.counts = {key: 0 for key in ('wheel', 'imu', 'gyro', 'ndt', 'ekf', 'output',
-                                         'cloud_received', 'cloud_forwarded', 'cloud_dropped', 'rejected')}
+                                         'cloud_received', 'cloud_forwarded', 'cloud_dropped', 'rejected',
+                                         'ndt_idle_sleeps', 'ndt_wakeups')}
         self.last_rejection = ''
         self.last_input_ns = {}
         self.ekf_first_ns = None
@@ -58,6 +61,20 @@ class FusionAdapter(Node):
         self.activation = {'ekf': False, 'ndt': False}
         self.futures = {}
         self.initial_sent = False
+        self.initial_publications = 0
+        self.pending_initial = None
+        self.initialization_steps = deque()
+        self.initialization_future = None
+        self.initialization_future_owner = None
+        self.initialization_restart = False
+        self.initial_epoch_ns = None
+        self.initial_acknowledged = False
+        self.initial_target = None
+        self.post_initial_ndt = False
+        self.ndt_epoch_ns = None
+        self.ndt_active_since_monotonic = None
+        self.ndt_last_result_monotonic = None
+        self.last_valid_cloud_ns = None
         self.clock_last_ns = None
         self.clock_error = False
         self.last_status_mode = None
@@ -87,6 +104,9 @@ class FusionAdapter(Node):
         self.create_subscription(PoseWithCovarianceStamped,
                                  self.topic_names['ekf_prediction'], self.on_ekf_prior, output_depth)
         self.create_subscription(Odometry, self.topic_names['ekf_odometry'], self.on_ekf_odom, output_depth)
+        if self.live_mode:
+            self.create_subscription(PoseWithCovarianceStamped, self.p['initial_pose_input_topic'],
+                                     self.on_initial_pose, self.p['initial_pose_queue_depth'])
         self.activation_clients = {
             'ekf': self.create_client(SetBool, self.service_names['ekf_activation']),
             'ndt': self.create_client(SetBool, self.service_names['ndt_activation']),
@@ -101,7 +121,11 @@ class FusionAdapter(Node):
                                'Outputs represent the rear wheel center. Mounting pitch is provisional.')
 
     def now_ns(self):
-        return self.get_clock().now().nanoseconds
+        now = self.get_clock().now().nanoseconds
+        if self.clock_last_ns is not None and now < self.clock_last_ns:
+            self.clock_error = True
+        self.clock_last_ns = now
+        return now
 
     def reject(self, reason):
         self.counts['rejected'] += 1
@@ -109,6 +133,15 @@ class FusionAdapter(Node):
 
     def observe(self, stream, stamp):
         ns = stamp_ns(stamp)
+        if getattr(self, 'live_mode', False):
+            now = self.now_ns()
+            if self.clock_error:
+                self.reject('clock_reversed_restart_required')
+                return False
+            age = (now - ns) * 1e-9
+            if age > self.p['max_sensor_age_s'] or age < -self.p['live_future_tolerance_s']:
+                self.reject(('stale_' if age > 0 else 'future_') + stream + '_stamp')
+                return False
         if ns <= 0 or ns <= self.last_input_ns.get(stream, -1):
             self.reject('non_increasing_' + stream + '_stamp')
             return False
@@ -123,6 +156,10 @@ class FusionAdapter(Node):
             self.reject('invalid_wheel_frame_or_velocity')
             return
         if not self.observe('wheel', msg.header.stamp):
+            return
+        if getattr(self, 'live_mode', False) and not (self.initial_sent and self.initial_acknowledged):
+            # Native EKF queues twists even while inactive. Do not feed that
+            # unbounded queue while waiting indefinitely for an operator seed.
             return
         output = TwistWithCovarianceStamped()
         output.header = copy.deepcopy(msg.header)
@@ -140,6 +177,8 @@ class FusionAdapter(Node):
             self.reject('invalid_imu_frame_or_angular_velocity')
             return
         if not self.observe('imu', msg.header.stamp):
+            return
+        if getattr(self, 'live_mode', False) and not (self.initial_sent and self.initial_acknowledged):
             return
         output = Imu()
         output.header = copy.deepcopy(msg.header)
@@ -169,14 +208,39 @@ class FusionAdapter(Node):
                 self.counts['gyro'] += 1
 
     def on_ndt(self, msg):
+        if self.live_mode and (not self.initial_acknowledged or not self.activation['ndt']
+                               or self.initial_epoch_ns is None
+                               or stamp_ns(msg.header.stamp) < max(self.initial_epoch_ns, self.ndt_epoch_ns or 0)):
+            return
         if msg.header.frame_id == self.p['map_frame'] and self.observe('ndt', msg.header.stamp):
             self.counts['ndt'] += 1
+            self.post_initial_ndt = True
+            self.ndt_last_result_monotonic = time.monotonic()
 
     def on_ekf_prior(self, msg):
         # Observation only. This adapter has no continuous prior publisher.
         if msg.header.frame_id != self.p['map_frame']:
             return
         ns = stamp_ns(msg.header.stamp)
+        if self.live_mode:
+            if (not self.initial_sent or self.initial_epoch_ns is None or ns < self.initial_epoch_ns
+                    or not self.activation['ndt'] or ns < (self.ndt_epoch_ns or 0) or self.clock_error):
+                return
+            age = (self.now_ns() - ns) * 1e-9
+            if not -self.p['live_future_tolerance_s'] <= age <= self.p['max_sensor_age_s']:
+                return
+            if not self.initial_acknowledged:
+                # The initial-pose topic has no service acknowledgement. Confirm
+                # its effect on the EKF state before releasing any new scans.
+                target, actual = self.initial_target.pose.pose, msg.pose.pose
+                distance = math.sqrt(sum((getattr(actual.position, axis)-getattr(target.position, axis))**2
+                                         for axis in ('x', 'y', 'z')))
+                dot = abs(sum(getattr(actual.orientation, axis)*getattr(target.orientation, axis)
+                              for axis in ('x', 'y', 'z', 'w')))
+                if (not math.isfinite(distance) or distance > self.p['initial_pose_ack_position_m']
+                        or not math.isfinite(dot) or dot < math.cos(self.p['initial_pose_ack_angle_rad']/2)):
+                    return
+                self.initial_acknowledged = True
         if self.ekf_last_ns is not None and ns <= self.ekf_last_ns:
             return
         if self.ekf_first_ns is None:
@@ -186,6 +250,10 @@ class FusionAdapter(Node):
     def on_cloud(self, msg):
         self.counts['cloud_received'] += 1
         if msg.header.frame_id != self.p['cloud_frame'] or not self.observe('cloud', msg.header.stamp):
+            self.counts['cloud_dropped'] += 1
+            return
+        if self.live_mode and (not self.initial_sent or self.initial_epoch_ns is None
+                               or stamp_ns(msg.header.stamp) < self.initial_epoch_ns):
             self.counts['cloud_dropped'] += 1
             return
         try:
@@ -198,15 +266,160 @@ class FusionAdapter(Node):
             self.pending.popleft()
             self.counts['cloud_dropped'] += 1
         self.pending.append((cloud, None))
+        self.last_valid_cloud_ns = stamp_ns(cloud.header.stamp)
+
+    def configured_initial_pose(self):
+        initial = PoseWithCovarianceStamped()
+        initial.header.frame_id = self.p['map_frame']
+        xyz, quat = self.p['initial_base_xyz'], self.p['initial_base_quaternion']
+        initial.pose.pose.position.x, initial.pose.pose.position.y, initial.pose.pose.position.z = xyz
+        (initial.pose.pose.orientation.x, initial.pose.pose.orientation.y,
+         initial.pose.pose.orientation.z, initial.pose.pose.orientation.w) = quat
+        for index, variance in zip((0, 7, 14, 21, 28, 35), self.p['initial_covariance_diagonal']):
+            initial.pose.covariance[index] = variance
+        return initial
+
+    def on_initial_pose(self, msg):
+        if not self.live_mode or self.clock_error:
+            return
+        p, q = msg.pose.pose.position, msg.pose.pose.orientation
+        covariance = np.asarray(msg.pose.covariance).reshape(6, 6)
+        if (msg.header.frame_id != self.p['map_frame']
+                or not all(math.isfinite(value) for value in (p.x, p.y, p.z, q.x, q.y, q.z, q.w))
+                or abs(q.x*q.x+q.y*q.y+q.z*q.z+q.w*q.w-1.) > 1e-3
+                or not np.all(np.isfinite(covariance))
+                or not np.allclose(covariance, covariance.T, atol=1e-8, rtol=1e-6)
+                or np.any(np.diag(covariance)[[0, 1, 5]] <= 0)
+                or np.linalg.eigvalsh(covariance).min() < -1e-9):
+            self.reject('invalid_initial_pose_frame_pose_or_covariance')
+            return
+        self.pending_initial = copy.deepcopy(msg)
+        self.initialization_restart = True
+        self.initial_sent = False
+        self.initial_epoch_ns = None
+        self.initial_acknowledged = False
+        self.post_initial_ndt = False
+        self.last_valid_cloud_ns = None
+        self.pending.clear()
+        self.ekf_first_ns = self.ekf_last_ns = None
+        for name in ('gyro', 'ndt'):
+            self.latest.pop(name, None)
+            self.last_input_ns.pop(name, None)
+
+    def poll_native_transition(self, now_ns):
+        """One service request at a time for initialization, idle recovery and clock faults."""
+        if self.initialization_future is not None:
+            name, desired, future = self.initialization_future
+            if not future.done():
+                return False
+            owner = self.initialization_future_owner
+            self.initialization_future = None
+            self.initialization_future_owner = None
+            try:
+                success = bool(future.result().success)
+            except Exception as error:
+                success = False
+                self.reject('initialization_service_error:' + str(error))
+            if not success:
+                if owner == 'initialization' and not self.clock_error:
+                    self.initialization_steps.appendleft((name, desired))
+                return False
+            self.activation[name] = desired
+            if name == 'ndt':
+                # NDT true clears its native prior buffer. Coverage recorded by
+                # the adapter must restart at the same epoch, including after a
+                # prolonged outage; no stale scans may use the previous buffer.
+                self.ekf_first_ns = self.ekf_last_ns = None
+                self.latest.pop('ndt', None)
+                if desired:
+                    self.ndt_epoch_ns = now_ns
+                    self.ndt_active_since_monotonic = time.monotonic()
+                    self.ndt_last_result_monotonic = None
+                    if owner == 'idle':
+                        self.counts['ndt_wakeups'] += 1
+                else:
+                    self.ndt_active_since_monotonic = None
+                    if owner == 'idle':
+                        self.counts['ndt_idle_sleeps'] += 1
+        return True
+
+    def request_native_transition(self, name, desired, owner):
+        client = self.activation_clients[name]
+        if self.initialization_future is None and client.service_is_ready():
+            self.initialization_future = (name, desired, client.call_async(SetBool.Request(data=desired)))
+            self.initialization_future_owner = owner
+            return True
+        return False
+
+    def live_initialization_tick(self):
+        if self.pending_initial is None and not self.initial_sent and self.p['initialization'] == 'config':
+            self.on_initial_pose(self.configured_initial_pose())
+        if self.initialization_restart:
+            # NDT deactivation acknowledgement waits for its in-flight scan
+            # callback. EKF true clears measurement queues; NDT true clears its
+            # prior buffer. Keep public output paused through this sequence.
+            self.initialization_steps = deque((('ndt', False), ('ekf', False),
+                                               ('ndt', True), ('ekf', True)))
+            self.initialization_restart = False
+        if self.initialization_steps:
+            name, desired = self.initialization_steps[0]
+            if self.request_native_transition(name, desired, 'initialization'):
+                self.initialization_steps.popleft()
+            return
+        if (self.pending_initial is not None and all(self.activation.values())
+                and self.initial_pub.get_subscription_count() > 0):
+            initial = self.pending_initial
+            initial.header.stamp = self.get_clock().now().to_msg()
+            self.initial_epoch_ns = stamp_ns(initial.header.stamp)
+            self.initial_target = copy.deepcopy(initial)
+            self.initial_pub.publish(initial)
+            self.initial_sent = True
+            self.initial_publications += 1
+            self.pending_initial = None
+            self.get_logger().info('Published map->rear-center initial pose; waiting for EKF acknowledgement and fresh NDT.')
+
+    def ndt_idle_tick(self, now_ns):
+        """Bound the locked native NDT prior cache while point clouds are absent/bad.
+
+        Native NDT prunes prior history only in successful scan interpolation.
+        After a bounded interval without a valid result, suspend it. Fresh valid
+        clouds wake it through true activation, which clears the native cache.
+        Continuous failing scans therefore also trigger bounded periodic resets.
+        EKF<->NDT remains a direct native feedback connection.
+        """
+        if (self.initialization_future is not None or self.initialization_steps
+                or self.initialization_restart or self.pending_initial is not None or not self.initial_sent):
+            return
+        if self.activation['ndt']:
+            last_result = self.ndt_last_result_monotonic
+            anchor = last_result if last_result is not None else self.ndt_active_since_monotonic
+            if anchor is not None and time.monotonic()-anchor >= self.p['ndt_idle_timeout_s']:
+                self.request_native_transition('ndt', False, 'idle')
+        elif (self.last_valid_cloud_ns is not None
+              and 0 <= (now_ns-self.last_valid_cloud_ns)*1e-9 <= self.p['max_sensor_age_s']):
+            self.request_native_transition('ndt', True, 'idle')
 
     def tick(self):
         now_ns = self.now_ns()
         if self.clock_last_ns is not None and now_ns < self.clock_last_ns:
             self.clock_error = True
         self.clock_last_ns = now_ns
+        transition_ready = self.poll_native_transition(now_ns) if self.live_mode else True
         if now_ns <= 0 or self.clock_error:
+            if self.clock_error:
+                self.pending.clear()
+                self.initialization_steps.clear()
+                self.initialization_restart = False
+                # A clock fault stops sensor forwarding permanently, but the
+                # native EKF process can still publish priors. Explicitly stop
+                # NDT too, after any in-flight service request has completed.
+                if self.live_mode and transition_ready and self.activation['ndt']:
+                    self.request_native_transition('ndt', False, 'clock_fault')
             return
-        for name, client in self.activation_clients.items():
+        if self.live_mode and transition_ready:
+            self.live_initialization_tick()
+            self.ndt_idle_tick(now_ns)
+        for name, client in (() if self.live_mode else self.activation_clients.items()):
             if name in self.futures:
                 future = self.futures[name]
                 if future.done():
@@ -217,32 +430,28 @@ class FusionAdapter(Node):
                     del self.futures[name]
             elif not self.activation[name] and client.service_is_ready():
                 self.futures[name] = client.call_async(SetBool.Request(data=True))
-        if (all(self.activation.values()) and not self.initial_sent
+        if (not self.live_mode and all(self.activation.values()) and not self.initial_sent
                 and self.initial_pub.get_subscription_count() > 0):
-            initial = PoseWithCovarianceStamped()
-            initial.header.frame_id = self.p['map_frame']
+            initial = self.configured_initial_pose()
             initial.header.stamp = self.get_clock().now().to_msg()
-            xyz, quat = self.p['initial_base_xyz'], self.p['initial_base_quaternion']
-            initial.pose.pose.position.x, initial.pose.pose.position.y, initial.pose.pose.position.z = xyz
-            (initial.pose.pose.orientation.x, initial.pose.pose.orientation.y,
-             initial.pose.pose.orientation.z, initial.pose.pose.orientation.w) = quat
-            for index, variance in zip((0, 7, 14, 21, 28, 35), self.p['initial_covariance_diagonal']):
-                initial.pose.covariance[index] = variance
             self.initial_pub.publish(initial)
             self.initial_sent = True
+            self.initial_publications += 1
             self.get_logger().info('Initialized EKF once with map->rear-center pose converted from map->body ICP.')
         # Wait for real EKF samples to cover the original acquisition timestamp.
         # No interpolation, extrapolation or NDT self-feedback happens here.
         while self.pending:
             cloud, ready_at = self.pending[0]
             ns = stamp_ns(cloud.header.stamp)
-            if ((now_ns - ns) * 1e-9 > self.p['scan_wait_timeout']
+            max_age = min(self.p['scan_wait_timeout'], self.p['max_sensor_age_s']) if self.live_mode else self.p['scan_wait_timeout']
+            if ((now_ns - ns) * 1e-9 > max_age
                     or (self.ekf_first_ns is not None and ns < self.ekf_first_ns)):
                 self.pending.popleft()
                 self.counts['cloud_dropped'] += 1
                 continue
             if (self.ekf_first_ns is None or self.ekf_last_ns == self.ekf_first_ns
-                    or ns > self.ekf_last_ns or not self.activation['ndt']):
+                    or ns > self.ekf_last_ns or not self.activation['ndt']
+                    or (self.live_mode and (not self.initial_acknowledged or self.initialization_future is not None))):
                 break
             if ready_at is None:
                 self.pending[0] = (cloud, time.monotonic() + self.p['scan_relay_delay'])
@@ -254,11 +463,16 @@ class FusionAdapter(Node):
             self.counts['cloud_forwarded'] += 1
 
     def current_mode(self):
+        now = self.now_ns()
         if self.clock_error:
             return 'CLOCK_REVERSED_RESTART_REQUIRED', False
         if not self.initial_sent:
+            if self.live_mode and self.pending_initial is None:
+                return 'WAITING_INITIAL_POSE', False
             return 'INITIALIZING', False
-        return fusion_mode(self.now_ns() * 1e-9, self.latest, self.p['sensor_timeout'],
+        if self.live_mode and not self.post_initial_ndt:
+            return 'WAITING_SENSORS', False
+        return fusion_mode(now * 1e-9, self.latest, self.p['sensor_timeout'],
                            self.p['ndt_timeout'], self.p['prediction_timeout'], self.p['future_tolerance'])
 
     def on_ekf_odom(self, msg):
@@ -267,6 +481,7 @@ class FusionAdapter(Node):
         ns = stamp_ns(msg.header.stamp)
         p, q = msg.pose.pose.position, msg.pose.pose.orientation
         if (not usable or msg.header.frame_id != self.p['map_frame'] or msg.child_frame_id != self.p['base_frame']
+                or (self.live_mode and (self.initial_epoch_ns is None or ns < self.initial_epoch_ns))
                 or (self.last_output_ns is not None and ns <= self.last_output_ns)
                 or abs(self.now_ns() - ns) * 1e-9 > self.p['sensor_timeout']
                 or not all(math.isfinite(v) for v in
@@ -301,7 +516,9 @@ class FusionAdapter(Node):
             'mode': mode, 'public_output_enabled': usable,
             'chain': 'wheel_and_imu_to_native_gyro_to_native_ekf_and_native_ndt',
             'ndt_prior_source': 'native_ekf_only', 'wheel_pose_used': False,
-            'imu_acceleration_used': False, 'initial_pose_publications': int(self.initial_sent),
+            'runtime_mode': self.p['runtime_mode'], 'initialization_source': self.p['initialization'],
+            'initial_pose_acknowledged': self.initial_acknowledged,
+            'imu_acceleration_used': False, 'initial_pose_publications': self.initial_publications,
             'map_frame': self.p['map_frame'], 'output_reference': 'rear_wheel_center',
             'odometry_child_frame': self.p['base_frame'], 'public_tf_child_frame': self.p['rear_frame'],
             'mount_xyz': self.p['mount_xyz'], 'mount_rpy': self.p['mount_rpy'],
@@ -315,6 +532,9 @@ class FusionAdapter(Node):
             'sensor_timeout': self.p['sensor_timeout'], 'ndt_timeout': self.p['ndt_timeout'],
             'prediction_timeout': self.p['prediction_timeout'],
             'activation': self.activation, 'counts': self.counts,
+            'ndt_idle_timeout_s': self.p['ndt_idle_timeout_s'],
+            'ndt_prior_epoch_ns': self.ndt_epoch_ns,
+            'native_transition_owner': self.initialization_future_owner,
             'pending_scans': len(self.pending), 'last_rejection': self.last_rejection,
         }
         self.status_pub.publish(String(data=json.dumps(status, sort_keys=True)))

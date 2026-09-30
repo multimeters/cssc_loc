@@ -12,7 +12,7 @@ from .geometry import body_pose_to_base, quaternion_multiply, quaternion_rpy
 FRAME_KEYS = ('map', 'rear', 'base', 'lidar', 'cloud', 'imu', 'wheel', 'ndt_debug')
 TOPIC_KEYS = ('wheel', 'imu', 'points', 'processed_points', 'preprocessing_status',
               'wheel_twist', 'imu_base', 'ndt_points',
-              'initial_pose', 'odometry', 'pose', 'ndt_pose', 'ndt_pose_stamped',
+              'initial_pose', 'initial_pose_input', 'odometry', 'pose', 'ndt_pose', 'ndt_pose_stamped',
               'ekf_prediction', 'ekf_odometry', 'gyro_twist', 'fusion_status',
               'diagnostics', 'ekf_tf', 'ndt_tf', 'metrics_prefix', 'clock')
 EXTRINSIC_FRAMES = {
@@ -85,24 +85,28 @@ def flatten_parameters(values, prefix=''):
     return result
 
 
-def load_config(path):
+def load_config(path, mode=None):
     """Return normalized config with absolute paths and derived native parameters.
 
     Sensor/map path existence is checked by the runner or launch, so configuration
     can be validated before a dataset is copied. Referenced native YAML files must
     exist. `_derived` and `_native_parameters` are regenerated on every load;
     previously saved resolved configurations cannot override their calculations.
+    The serialized runtime mode and clock choice must agree. An explicit mode
+    override then changes both together before native parameters are resolved.
     """
     source = Path(path).expanduser().resolve()
     with source.open(encoding='utf-8') as handle:
         config = yaml.safe_load(handle)
-    require_keys(config, ('schema_version', 'paths', 'runtime', 'replay', 'frames', 'topics',
+    require_keys(config, ('schema_version', 'paths', 'runtime', 'live', 'replay', 'frames', 'topics',
                          'services', 'extrinsics', 'initial_pose', 'livox', 'adapter', 'native_parameters', 'validation'), 'config')
     config = copy.deepcopy(config)
     if type(config['schema_version']) is not int or config['schema_version'] != 1:
         raise ValueError('Only schema_version 1 is supported')
     require_keys(config['paths'], ('bag', 'map', 'map_metadata', 'output_root'), 'paths')
     for name, value in config['paths'].items():
+        if name == 'bag' and value is None:
+            continue
         if name == 'map_metadata' and value in (None, ''):
             config['paths'][name] = ''
             continue
@@ -110,10 +114,41 @@ def load_config(path):
             raise ValueError('paths.' + name + ' must be a nonempty path')
         candidate = Path(value).expanduser()
         config['paths'][name] = str((source.parent / candidate).resolve())
-    require_keys(config['runtime'], ('use_sim_time',), 'runtime')
+    require_keys(config['runtime'], ('mode', 'use_sim_time'), 'runtime')
     boolean(config['runtime']['use_sim_time'], 'runtime.use_sim_time')
-    if not config['runtime']['use_sim_time']:
-        raise ValueError('runtime.use_sim_time must be true for original acquisition-timestamp replay')
+    serialized_mode = config['runtime']['mode']
+    if serialized_mode not in ('live', 'replay'):
+        raise ValueError('runtime.mode must be live or replay')
+    if config['runtime']['use_sim_time'] != (serialized_mode == 'replay'):
+        raise ValueError('runtime.mode/use_sim_time must agree: live/false or replay/true')
+    if mode is not None and mode not in ('live', 'replay'):
+        raise ValueError('mode override must be live or replay')
+    selected_mode = serialized_mode if mode is None else mode
+    config['runtime']['mode'] = selected_mode
+    config['runtime']['use_sim_time'] = selected_mode == 'replay'
+    live = config['live']
+    require_keys(live, ('domain_id', 'localhost_only', 'initialization', 'max_sensor_age_s', 'ndt_idle_timeout_s',
+                        'motion_wait_timeout_s',
+                        'future_tolerance_s', 'initial_pose_ack_position_m', 'initial_pose_ack_angle_rad',
+                        'status_period_s', 'log_max_bytes', 'log_backup_count'), 'live')
+    if type(live['domain_id']) is not int or not 0 <= live['domain_id'] <= 232:
+        raise ValueError('live.domain_id must be an integer from 0 to 232')
+    boolean(live['localhost_only'], 'live.localhost_only')
+    if live['initialization'] not in ('topic', 'config'):
+        raise ValueError('live.initialization must be topic or config')
+    live['max_sensor_age_s'] = number(live['max_sensor_age_s'], 'live.max_sensor_age_s', 0., True)
+    live['motion_wait_timeout_s'] = number(live['motion_wait_timeout_s'], 'live.motion_wait_timeout_s', 0., True)
+    if live['motion_wait_timeout_s'] >= live['max_sensor_age_s']:
+        raise ValueError('live.motion_wait_timeout_s must be below live.max_sensor_age_s')
+    live['ndt_idle_timeout_s'] = number(live['ndt_idle_timeout_s'], 'live.ndt_idle_timeout_s',
+                                        live['max_sensor_age_s'], True)
+    live['future_tolerance_s'] = number(live['future_tolerance_s'], 'live.future_tolerance_s', 0.)
+    live['status_period_s'] = number(live['status_period_s'], 'live.status_period_s', 0., True)
+    for name in ('initial_pose_ack_position_m', 'initial_pose_ack_angle_rad'):
+        live[name] = number(live[name], 'live.' + name, 0., True)
+    for name in ('log_max_bytes', 'log_backup_count'):
+        if type(live[name]) is not int or live[name] < 1:
+            raise ValueError('live.' + name + ' must be a positive integer')
     frames = config['frames']
     require_keys(frames, FRAME_KEYS, 'frames')
     for name in FRAME_KEYS:
@@ -137,6 +172,9 @@ def load_config(path):
         raise ValueError('Processed PointCloud2 must have a separate topic from raw inputs and NDT relay')
     if config['topics']['ekf_prediction'] == config['topics']['ndt_pose']:
         raise ValueError('EKF prediction and NDT observation topics must differ')
+    if config['topics']['initial_pose_input'] in [config['topics'][name] for name in
+                                                ('initial_pose', 'pose', 'ndt_pose', 'ekf_prediction')]:
+        raise ValueError('initial_pose_input must differ from internal and output pose topics')
     extrinsics = config['extrinsics']
     require_keys(extrinsics, EXTRINSIC_FRAMES, 'extrinsics')
     transforms = []
@@ -200,7 +238,8 @@ def load_config(path):
         replay[name] = number(replay[name], 'replay.' + name, 0., True)
     for name in ('warmup_seconds', 'tail_seconds', 'drain_seconds'):
         replay[name] = number(replay[name], 'replay.' + name, 0.)
-    if replay['tail_seconds'] < livox['max_scan_duration_s'] + livox['wait_timeout_s']:
+    if (selected_mode == 'replay'
+            and replay['tail_seconds'] < livox['max_scan_duration_s'] + livox['wait_timeout_s']):
         raise ValueError('replay.tail_seconds must cover livox.max_scan_duration_s + livox.wait_timeout_s')
     if replay['max_bag_seconds'] is not None:
         replay['max_bag_seconds'] = number(replay['max_bag_seconds'], 'replay.max_bag_seconds', 0., True)
@@ -268,6 +307,14 @@ def adapter_parameters(config):
     mount = config['extrinsics']['rear_to_lidar']
     result = copy.deepcopy(config['adapter'])
     result.update({
+        'runtime_mode': config['runtime']['mode'],
+        'initialization': config['live']['initialization'] if config['runtime']['mode'] == 'live' else 'config',
+        'initial_pose_input_topic': topics['initial_pose_input'],
+        'max_sensor_age_s': config['live']['max_sensor_age_s'],
+        'ndt_idle_timeout_s': config['live']['ndt_idle_timeout_s'],
+        'live_future_tolerance_s': config['live']['future_tolerance_s'],
+        'initial_pose_ack_position_m': config['live']['initial_pose_ack_position_m'],
+        'initial_pose_ack_angle_rad': config['live']['initial_pose_ack_angle_rad'],
         'wheel_topic': topics['wheel'], 'imu_topic': topics['imu'],
         'points_topic': topics['processed_points'], 'raw_points_topic': topics['points'],
         'wheel_frame': frames['wheel'], 'imu_frame': frames['imu'], 'cloud_frame': frames['cloud'],
