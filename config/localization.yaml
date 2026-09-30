@@ -1,5 +1,6 @@
-# Single runtime configuration. Relative paths are resolved from this file's directory.
-# RPY uses ROS fixed-axis order Rz(yaw) * Ry(pitch) * Rx(roll).
+# 唯一运行主配置。相对路径以本文件所在目录为基准。
+# 外参 xyz_m 使用米，rpy_deg 使用度；初值 rpy_rad 使用弧度。
+# RPY 采用 ROS 固定轴顺序：Rz(yaw) * Ry(pitch) * Rx(roll)。
 schema_version: 1
 paths:
   bag: ../../zhongchuanbag-20260930T031102Z-1-001/zhongchuanbag/bags/hunter_sensors_20260930_104649
@@ -20,7 +21,7 @@ replay:
 frames:
   map: map
   rear: base_footprint
-  base: base_link  # Locked native EKF constraint; rear_to_base must be identity.
+  base: base_link  # 原生 EKF 的约束：rear_to_base 必须为恒等变换。
   lidar: mid360_link
   cloud: body
   imu: livox_frame
@@ -57,6 +58,7 @@ extrinsics:
     rpy_deg: [0.0, 0.0, 0.0]
     provenance: user_confirmed_rear_wheel_center_identity
   rear_to_lidar:
+    # 后轮中心 → 雷达：+25.06895° 为授权试跑估计值，尚未实测标定。
     xyz_m: [0.432445, 0.0, 0.368458]
     rpy_deg: [0.0, 25.06895, 0.0]
     provenance: provisional_forward_tilt_from_static_gravity_user_authorized
@@ -67,6 +69,7 @@ extrinsics:
     rpy_deg: [0.0, 0.0, 0.0]
     provenance: user_confirmed_body_equals_mid360_origin_and_axes
   lidar_to_imu:
+    # 雷达 → 内置 IMU：官方定义三轴同向，只有原点偏移。
     xyz_m: [0.011, 0.02329, -0.04412]
     rpy_deg: [0.0, 0.0, 0.0]
     provenance: official_mid360_user_manual_2024_imu_axes_and_origin
@@ -101,7 +104,7 @@ native_parameters:
   ekf: native/ekf.yaml
   ndt: native/ndt.yaml
   map_loader: native/map_loader.yaml
-# Output/coverage checks only. Passing these does not establish physical accuracy.
+# 仅用于输出完整性和覆盖检查；通过这些阈值不代表绝对定位精度已验证。
 validation:
   min_gyro_messages: 100
   min_ndt_acceptance_ratio: 0.9

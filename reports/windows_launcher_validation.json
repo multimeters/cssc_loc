@@ -16,5 +16,72 @@
   "fixture_cmd_failure_exit_code": 23,
   "fixture_error_only_pause_observed": true,
   "evaluator_nonzero_roll_or_yaw": "Explicitly rejected as unsupported pitch-only transform; launch pipeline can still use complete YAML rotation.",
-  "fixture_equals_option_windows_path_conversion_passed": true
+  "fixture_equals_option_windows_path_conversion_passed": true,
+  "path_flag_cases": [
+    {
+      "flag": "--config",
+      "form": "split",
+      "path_kind": "relative",
+      "passed": true,
+      "exit_code": 0,
+      "actual": "./路径 with spaces/sample"
+    },
+    {
+      "flag": "--config",
+      "form": "split",
+      "path_kind": "absolute",
+      "passed": true,
+      "exit_code": 0,
+      "actual": "/mnt/e/路径 with spaces/sample"
+    },
+    {
+      "flag": "--config",
+      "form": "equals",
+      "path_kind": "relative",
+      "passed": true,
+      "exit_code": 0,
+      "actual": "./路径 with spaces/sample"
+    },
+    {
+      "flag": "--config",
+      "form": "equals",
+      "path_kind": "absolute",
+      "passed": true,
+      "exit_code": 0,
+      "actual": "/mnt/e/路径 with spaces/sample"
+    },
+    {
+      "flag": "--output",
+      "form": "split",
+      "path_kind": "relative",
+      "passed": true,
+      "exit_code": 0,
+      "actual": "./路径 with spaces/sample"
+    },
+    {
+      "flag": "--output",
+      "form": "split",
+      "path_kind": "absolute",
+      "passed": true,
+      "exit_code": 0,
+      "actual": "/mnt/e/路径 with spaces/sample"
+    },
+    {
+      "flag": "--output",
+      "form": "equals",
+      "path_kind": "relative",
+      "passed": true,
+      "exit_code": 0,
+      "actual": "./路径 with spaces/sample"
+    },
+    {
+      "flag": "--output",
+      "form": "equals",
+      "path_kind": "absolute",
+      "passed": true,
+      "exit_code": 0,
+      "actual": "/mnt/e/路径 with spaces/sample"
+    }
+  ],
+  "path_flag_test_utc": "2026-09-30T05:30:55.6206565Z"
 }

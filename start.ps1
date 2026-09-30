@@ -110,27 +110,28 @@ try {
     }
     $linuxDirectory = ConvertTo-WslPath $launcherDirectory
     $forwarded = New-Object 'System.Collections.Generic.List[string]'
-    $expectConfigPath = $false
+    $expectPathValue = $false
     foreach ($argument in $runnerArguments) {
         if ($argument -match '^[A-Za-z]:[\\/]' -or $argument.StartsWith('\\')) {
             $forwarded.Add((ConvertTo-WslPath $argument))
         } elseif ($argument -match '^--[^=]+=([A-Za-z]:[\\/]|\\\\)') {
             $equalsIndex = $argument.IndexOf('=')
             $forwarded.Add($argument.Substring(0, $equalsIndex + 1) + (ConvertTo-WslPath $argument.Substring($equalsIndex + 1)))
-        } elseif ($expectConfigPath) {
+        } elseif ($expectPathValue) {
             $forwarded.Add($argument.Replace('\', '/'))
-        } elseif ($argument.StartsWith('--config=')) {
-            $configValue = $argument.Substring('--config='.Length)
-            if ($configValue -match '^[A-Za-z]:[\\/]' -or $configValue.StartsWith('\\')) {
-                $configValue = ConvertTo-WslPath $configValue
+        } elseif ($argument -match '^--(config|output)=') {
+            $equalsIndex = $argument.IndexOf('=')
+            $pathValue = $argument.Substring($equalsIndex + 1)
+            if ($pathValue -match '^[A-Za-z]:[\\/]' -or $pathValue.StartsWith('\\')) {
+                $pathValue = ConvertTo-WslPath $pathValue
             } else {
-                $configValue = $configValue.Replace('\', '/')
+                $pathValue = $pathValue.Replace('\', '/')
             }
-            $forwarded.Add('--config=' + $configValue)
+            $forwarded.Add($argument.Substring(0, $equalsIndex + 1) + $pathValue)
         } else {
             $forwarded.Add($argument)
         }
-        $expectConfigPath = $argument -eq '--config'
+        $expectPathValue = $argument -in @('--config', '--output')
     }
     Write-Host ('正在启动定位工具（WSL：' + $distributionName + '）')
     Write-Host ('仓库目录：' + $launcherDirectory)

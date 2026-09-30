@@ -5,7 +5,7 @@
   <description>Standalone native Autoware NDT localization from body-frame point clouds and a PCD map.</description>
   <maintainer email="maintainers@example.com">APS localization maintainers</maintainer>
   <license>Apache-2.0</license>
-  <buildtool_depend>ament_python</buildtool_depend>
+  <buildtool_depend>python3-setuptools</buildtool_depend>
   <exec_depend>ament_index_python</exec_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>

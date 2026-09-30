@@ -1,0 +1,140 @@
+{
+  "date": "2026-09-30",
+  "startup": "start.cmd -> start.ps1 -> WSL Ubuntu-22.04 -> start.sh -> YAML-driven native ROS launch",
+  "source_config": "config/localization.yaml",
+  "cold_build": {
+    "elapsed_seconds": 264,
+    "succeeded": true,
+    "packages": 33
+  },
+  "unit_tests": {
+    "includes": [
+      "single extrinsic feeds TF, initial pose and IMU rotation",
+      "real ROS node construction",
+      "clock and configuration validation"
+    ],
+    "passed": 28
+  },
+  "source_lock_check": {
+    "mismatches": [],
+    "real_git_clone_verified": true,
+    "packages": 31
+  },
+  "dependencies": {
+    "rosdep_check_exit_code": 0,
+    "skipped_keys": []
+  },
+  "run": {
+    "local_result_directory": "artifacts/fusion/yaml-full-01",
+    "status": "completed",
+    "full_bag_completed": true,
+    "estimator_checks_passed": true,
+    "source_input_counts": {
+      "/cloud_registered_body": 969,
+      "/hunter_odom": 4807,
+      "/livox/imu": 2304
+    },
+    "input_messages_published": {
+      "/cloud_registered_body": 969,
+      "/hunter_odom": 4807,
+      "/livox/imu": 2304
+    },
+    "received_counts": {
+      "cloud_dropped": 0,
+      "cloud_forwarded": 969,
+      "cloud_received": 969,
+      "ekf": 5065,
+      "gyro": 1682,
+      "imu": 2304,
+      "ndt": 969,
+      "output": 4889,
+      "rejected": 0,
+      "wheel": 4807
+    },
+    "ekf": {
+      "count": 4889,
+      "span_s": 97.759735126,
+      "first_ns": 1790736409561454538,
+      "last_ns": 1790736507321189664,
+      "max_gap_s": 0.031251553,
+      "non_increasing_stamps": 0,
+      "max_step_m": 0.0593437201317263,
+      "path_length_m": 27.905895076661253,
+      "invalid_poses": 0,
+      "invalid_xy_yaw_variances": 0,
+      "frames": [
+        [
+          "map",
+          "base_link"
+        ]
+      ],
+      "first_xyz": [
+        3.143638713019729,
+        -2.4674399705139245,
+        0.046933565198152526
+      ],
+      "last_xyz": [
+        2.697819241300109,
+        -3.5948927986813977,
+        0.03540666206720938
+      ]
+    },
+    "ndt": {
+      "count": 969,
+      "span_s": 96.800902366,
+      "first_ns": 1790736409520505428,
+      "last_ns": 1790736506321407794,
+      "max_gap_s": 0.107044936,
+      "non_increasing_stamps": 0,
+      "max_step_m": 0.6416064736369508,
+      "path_length_m": 32.76402019030151,
+      "invalid_poses": 0,
+      "invalid_xy_yaw_variances": 0,
+      "frames": [
+        [
+          "map",
+          "base_link"
+        ]
+      ],
+      "first_xyz": [
+        3.1452887058258057,
+        -2.4776804447174072,
+        0.03700108081102371
+      ],
+      "last_xyz": [
+        2.693603754043579,
+        -3.595148801803589,
+        0.03587636351585388
+      ]
+    },
+    "gyro_messages": 1682,
+    "ekf_update_evidence": {
+      "pose": {
+        "diagnostic_samples": 5065,
+        "cycles_with_queued_measurements": 4595,
+        "native_reported_update_cycles": 4595,
+        "successful_cycle_span_s": 96.899619639,
+        "max_successful_cycle_gap_s": 0.060946464,
+        "note": "Native update path, with repeated smoothing cycles; not unique message count."
+      },
+      "twist": {
+        "diagnostic_samples": 5065,
+        "cycles_with_queued_measurements": 2078,
+        "native_reported_update_cycles": 2078,
+        "successful_cycle_span_s": 95.358521392,
+        "max_successful_cycle_gap_s": 0.859808724,
+        "note": "Native update path, with repeated smoothing cycles; not unique message count."
+      }
+    },
+    "ndt_accepted_to_published_ratio": 1.0,
+    "configuration_snapshot": "artifacts/fusion/yaml-full-01/config/localization.yaml and config/native/*.yaml",
+    "sensor_time_basis": "original acquisition header timestamps, sorted; payloads unchanged",
+    "final_mode": "STALE"
+  },
+  "limitations": [
+    "Mounting pitch is provisional, not independently calibrated",
+    "Full replay and convergence checks do not establish absolute accuracy",
+    "IMU gaps and final STALE remain; the historical NDT fluctuation is documented separately",
+    "Raw bags, maps, full run outputs and compiled files are excluded from Git"
+  ]
+}

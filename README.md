@@ -176,6 +176,8 @@ python3 scripts/evaluate_fusion_result.py --results artifacts/fusion/某次结�
 
 ## 已完成的验证与限制
 
+本次统一 YAML / 一键启动版本已通过 28 项测试，并从空缓存完整编译 33 个包；随后实际从 Windows `start.cmd` 启动、再次增量编译并完成整包回放，969/969 帧通过 NDT 收敛检查，程序正常退出。新 Git 克隆目录的源码校验、配置读取和启动预检也已通过。详细记录见 [`reports/yaml_release_validation.json`](reports/yaml_release_validation.json) 和 [`reports/windows_launcher_validation.json`](reports/windows_launcher_validation.json)。
+
 2026-09-30 的原始完整融合验证得到 969/969 帧 NDT 位姿、1,679 条 gyro 融合速度和 4,889 条公开 EKF 位姿。两类测量均有持续进入 EKF 原生更新路径的证据；10 帧点云抽样中，EKF 变换结果在 0.2 米内的地图重叠率约 93.09%。详见 [`reports/final_fusion_validation/validation.md`](reports/final_fusion_validation/validation.md)。
 
 已知限制保留在本次版本中：
