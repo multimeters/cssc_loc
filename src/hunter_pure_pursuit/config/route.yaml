@@ -1,0 +1,40 @@
+/**:
+  ros__parameters:
+    # Fixed map-frame route, ordered by the screenshots' timestamps.
+    waypoints_x_m: [-2.6195759860382593, -18.092743344326667, -37.583018827668724, -22.84]
+    waypoints_y_m: [0.7821050022544749, -16.935444385220684, -3.124571372720557, 17.16153188113376]
+    map_frame: map
+    base_frame: base_link
+    odom_topic: /localization/kinematic_state
+    fusion_status_topic: /localization/fusion_status
+    initial_pose_topic: /initialpose
+    cmd_vel_topic: /cmd_vel
+    require_fused_status: true
+    loop_route: true
+    pose_timeout_s: 0.5
+    status_timeout_s: 2.5
+    control_rate_hz: 20.0
+
+    # Hunter SE Ackermann limits; forward speed uses the configured base maximum.
+    wheelbase_m: 0.52
+    max_steering_angle_rad: 0.283
+    min_turning_radius_m: 1.9
+    max_speed_mps: 1.5
+    max_reverse_speed_mps: 0.15
+    max_yaw_rate_radps: 0.35
+    max_lateral_accel_mps2: 0.35
+    max_linear_accel_mps2: 0.30
+    max_angular_accel_radps2: 0.60
+    direction_switch_hysteresis_m: 0.20
+
+    lookahead_distance_m: 1.2
+    lookahead_gain: 0.5
+    lookahead_min_m: 0.8
+    lookahead_max_m: 2.0
+    slowdown_distance_m: 1.5
+    waypoint_approach_distance_m: 2.0
+    waypoint_approach_speed_mps: 0.35
+    waypoint_reach_m: 0.45
+    waypoint_recovery_radius_m: 6.0
+    waypoint_passed_behind_m: 0.75
+    resume_near_waypoint_m: 1.0

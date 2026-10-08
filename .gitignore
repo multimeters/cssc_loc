@@ -15,3 +15,4 @@ reports/bag_audit.md
 *.pcd
 *.pgm
 *.zip
+logs/waypoint4_diagnostics/
