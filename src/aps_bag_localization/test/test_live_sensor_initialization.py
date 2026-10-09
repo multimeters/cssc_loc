@@ -12,7 +12,7 @@ import rclpy
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from livox_ros_driver2.msg import CustomMsg, CustomPoint
 from nav_msgs.msg import Odometry
-from sensor_msgs.msg import Imu
+from sensor_msgs.msg import Imu, PointCloud2
 import yaml
 
 from aps_bag_localization.configuration import load_config
