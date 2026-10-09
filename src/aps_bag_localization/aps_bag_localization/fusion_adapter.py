@@ -229,7 +229,8 @@ class FusionAdapter(Node):
     def on_ndt(self, msg):
         if self.live_mode and (not self.initial_acknowledged or not self.activation['ndt']
                                or self.initial_epoch_ns is None
-                               or stamp_ns(msg.header.stamp) < max(self.initial_epoch_ns, self.ndt_epoch_ns or 0)):
+                               or stamp_ns(msg.header.stamp) < self.initial_epoch_ns
+                               or (self.post_initial_ndt and stamp_ns(msg.header.stamp) < (self.ndt_epoch_ns or 0))):
             return
         if msg.header.frame_id == self.p['map_frame'] and self.observe('ndt', msg.header.stamp):
             self.counts['ndt'] += 1
