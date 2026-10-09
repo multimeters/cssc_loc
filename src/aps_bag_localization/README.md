@@ -67,9 +67,11 @@ ros2 launch aps_bag_localization localization.launch.py \
 
 可使用 RViz 初始位姿工具或外部程序发布符合上述约定的初值。外部初值已是地图到后轮中心的变换，适配器不会再次乘雷达安装外参。内部初始化消息使用当前时钟时间；原始传感器时间戳保持不变。
 
-接收初值后，适配器按 Autoware pose initializer 的顺序停用 NDT/EKF，转发一帧新点云并调用 `/localization/pose_estimator/ndt_align_srv`，使用初值协方差运行原生 NDT Monte Carlo/TPE 搜索；只有服务返回 `success=true` 且 `reliable=true` 时，才把对齐后的位姿发布给 EKF，随后重新激活 NDT/EKF。RViz 配置会显示 `/localization/pose_estimator/monte_carlo_initial_pose_marker` 中的候选箭头。原生 EKF 初值话题没有应答，因此适配器检查初始化后的 EKF 预测是否在 `live.initial_pose_ack_position_m` 和 `live.initial_pose_ack_angle_rad` 容差内匹配**对齐后的位姿**。确认前不释放新扫描和轮速/IMU 派生观测；确认后还需新的 NDT 观测，才允许公开定位输出。
+接收初值后，适配器按 Autoware pose initializer 的顺序停用 NDT/EKF，转发一帧新点云并调用 `/localization/pose_estimator/ndt_align_srv`，使用初值协方差运行原生 NDT Monte Carlo/TPE 搜索；只有服务返回 `success=true` 时，才把对齐后的位姿发布给 EKF，随后重新激活 NDT/EKF。RViz 配置会显示 `/localization/pose_estimator/monte_carlo_initial_pose_marker` 中的候选箭头。原生 EKF 初值话题没有应答，因此适配器检查初始化后的 EKF 预测是否在 `live.initial_pose_ack_position_m` 和 `live.initial_pose_ack_angle_rad` 容差内匹配**对齐后的位姿**。确认前不释放新扫描和轮速/IMU 派生观测；确认后还需新的 NDT 观测，才允许公开定位输出。
 
-Monte Carlo 对齐失败或返回不可靠结果时，适配器不会把粗初值直接写入 EKF；请重新用 RViz 发布 `/initialpose`。这保证定位不会在未通过 NDT 初始搜索时开始输出。
+适配器同时提供与 Autoware `InitializeLocalization` 相同字段的 `/localization/initialize` 服务（消息类型为 `autoware_internal_localization_msgs/srv/InitializeLocalization`）。`AUTO` 使用请求中的地图坐标初值进入 NDT Monte Carlo，`DIRECT` 跳过 NDT 搜索而直接走 EKF/NDT 停启和复位流程；本 Hunter 配置没有 GNSS，因此不带 pose 的 `AUTO` 请求会返回错误。服务响应表示请求已接收，实际完成状态通过 `/localization/fusion_status` 的 `mode`、`initial_pose_acknowledged` 和 `monte_carlo` 字段观察。
+
+Monte Carlo 服务返回失败时，适配器不会把粗初值直接写入 EKF；请重新用 RViz 发布 `/initialpose`。服务若返回 `reliable=false`，会沿用 Autoware 的行为继续使用成功返回的对齐位姿，同时在 `fusion_status.monte_carlo.reliable` 和 `last_rejection` 中保留告警。
 
 再次发布外部初值可以重新初始化。重置期间暂停公开输出，丢弃旧扫描并等待新观测。等待初值时不会持续向未初始化的原生 EKF 积压速度观测。
 

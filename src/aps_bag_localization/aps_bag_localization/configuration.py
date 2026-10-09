@@ -159,7 +159,7 @@ def load_config(path, mode=None):
     if len(set(frames[name] for name in FRAME_KEYS if name != 'wheel')) != len(FRAME_KEYS) - 1:
         raise ValueError('Static-tree and map/debug frames must have distinct names')
     for section, keys in (('topics', TOPIC_KEYS),
-                          ('services', ('ekf_activation', 'ndt_activation', 'ndt_align', 'map_loader'))):
+                          ('services', ('initialize', 'ekf_activation', 'ndt_activation', 'ndt_align', 'map_loader'))):
         require_keys(config[section], keys, section)
         for name in keys:
             item = config[section][name]

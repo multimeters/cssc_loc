@@ -170,8 +170,8 @@ class LiveNdtCacheGuardTests(unittest.TestCase):
             node.pending.append((alignment_cloud, None))
             for _ in range(8):
                 node.tick()
-            self.assertEqual(calls, [('ndt', False), ('ndt', False), ('ekf', False),
-                                     ('ndt_align', 'map'), ('ndt', True), ('ekf', True)])
+            self.assertEqual(calls, [('ndt', False), ('ekf', False), ('ndt', False),
+                                     ('ndt_align', 'map'), ('ekf', True), ('ndt', True)])
             self.assertTrue(node.initial_sent)
             self.assertEqual(node.initial_publications, 1)
         finally:

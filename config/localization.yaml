@@ -75,6 +75,7 @@ topics:
   metrics_prefix: /localization/pose_estimator
   clock: /clock
 services:
+  initialize: /localization/initialize
   ekf_activation: /localization/ekf/trigger_node
   ndt_activation: /localization/ndt/trigger_node
   ndt_align: /localization/pose_estimator/ndt_align_srv

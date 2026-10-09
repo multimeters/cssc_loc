@@ -14,7 +14,7 @@ import rclpy
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
 from geometry_msgs.msg import PoseWithCovarianceStamped, TransformStamped, TwistWithCovarianceStamped
 from nav_msgs.msg import Odometry
-from autoware_internal_localization_msgs.srv import PoseWithCovarianceStamped as NdtAlign
+from autoware_internal_localization_msgs.srv import InitializeLocalization, PoseWithCovarianceStamped as NdtAlign
 from rclpy.clock import Clock, ClockType
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
@@ -82,6 +82,8 @@ class FusionAdapter(Node):
         self.monte_carlo_aligned = False
         self.monte_carlo_failed = False
         self.monte_carlo_attempts = 0
+        self.monte_carlo_reliable = None
+        self.direct_initialization = False
         self.ndt_epoch_ns = None
         self.ndt_active_since_monotonic = None
         self.ndt_last_result_monotonic = None
@@ -123,6 +125,11 @@ class FusionAdapter(Node):
             'ndt': self.create_client(SetBool, self.service_names['ndt_activation']),
         }
         self.ndt_align_client = self.create_client(NdtAlign, self.service_names['ndt_align'])
+        # Keep the public Autoware initialization entry point in this single
+        # lifecycle owner.  A second pose_initializer would race the same EKF
+        # and NDT trigger services and publish duplicate resets.
+        self.initialize_service = self.create_service(
+            InitializeLocalization, self.service_names['initialize'], self.on_initialize_request)
         self.tf_pub = TransformBroadcaster(self) if self.p['publish_tf'] else None
         self.wall_clock = Clock(clock_type=ClockType.STEADY_TIME)
         self.create_timer(self.p['tick_period'], self.tick, clock=self.wall_clock)
@@ -316,6 +323,8 @@ class FusionAdapter(Node):
         self.monte_carlo_cloud_sent = False
         self.monte_carlo_aligned = False
         self.monte_carlo_failed = False
+        self.monte_carlo_reliable = None
+        self.direct_initialization = False
         self.initialization_restart = True
         self.initialization_steps.clear()
         self.initial_sent = False
@@ -328,6 +337,38 @@ class FusionAdapter(Node):
         for name in ('gyro', 'ndt'):
             self.latest.pop(name, None)
             self.last_input_ns.pop(name, None)
+
+    def on_initialize_request(self, request, response):
+        """Accept Autoware's InitializeLocalization AUTO/DIRECT request.
+
+        The service is a command entry point; the asynchronous result is
+        exposed through ``fusion_status``.  AUTO uses the supplied pose as the
+        NDT Monte Carlo seed.  GNSS-only AUTO is deliberately rejected because
+        this Hunter profile has no GNSS pose or map-height fitter input.
+        """
+        response.status.success = False
+        response.status.code = 50000
+        response.status.message = 'initialization request rejected'
+        method = int(request.method)
+        if method not in (InitializeLocalization.Request.AUTO, InitializeLocalization.Request.DIRECT):
+            response.status.message = 'unsupported initialization method'
+            return response
+        if len(request.pose_with_covariance) != 1:
+            response.status.code = 50004
+            response.status.message = 'one map-frame pose is required for this lidar-only profile'
+            return response
+        pose = request.pose_with_covariance[0]
+        previous_rejection_count = self.counts['rejected']
+        self.on_initial_pose(pose)
+        if self.counts['rejected'] != previous_rejection_count or self.pending_initial is None:
+            response.status.code = 50004
+            response.status.message = self.last_rejection or 'invalid initial pose'
+            return response
+        self.direct_initialization = method == InitializeLocalization.Request.DIRECT
+        response.status.success = True
+        response.status.code = 0
+        response.status.message = 'initialization accepted; monitor /localization/fusion_status'
+        return response
 
     def forward_monte_carlo_source_cloud(self):
         """Give native NDT one fresh cloud before calling ndt_align_srv.
@@ -390,11 +431,13 @@ class FusionAdapter(Node):
             self.last_rejection = 'ndt_align_failed'
             self.reject(self.last_rejection)
             return False
+        # Autoware's pose_initializer continues with a successful NDT result
+        # even when the matcher marks it unreliable; expose that warning while
+        # preserving the native lifecycle instead of silently dropping the
+        # returned pose.
+        self.monte_carlo_reliable = reliable
         if not reliable:
-            self.monte_carlo_failed = True
             self.last_rejection = 'ndt_align_unreliable'
-            self.reject(self.last_rejection)
-            return False
         aligned = copy.deepcopy(response.pose_with_covariance)
         if aligned.header.frame_id != self.p['map_frame']:
             self.monte_carlo_failed = True
@@ -458,9 +501,12 @@ class FusionAdapter(Node):
         self.poll_monte_carlo_alignment()
         if self.initialization_restart:
             # NDT deactivation acknowledgement waits for its in-flight scan
-            # callback. Keep EKF inactive until NDT has returned a reliable
+            # callback. Keep EKF inactive until NDT has returned a successful
             # Monte Carlo alignment, then seed EKF with that refined pose.
-            self.initialization_steps = deque((('ndt', False), ('ekf', False)))
+            # Match pose_initializer's change_node_trigger(false): EKF first,
+            # then NDT, so no new EKF prediction can feed the scan matcher
+            # while its source/map state is being reset.
+            self.initialization_steps = deque((('ekf', False), ('ndt', False)))
             self.initialization_restart = False
         if self.initialization_steps:
             name, desired = self.initialization_steps[0]
@@ -468,6 +514,7 @@ class FusionAdapter(Node):
                 self.initialization_steps.popleft()
             return
         if (self.live_mode and self.pending_initial is not None
+                and not self.direct_initialization
                 and not self.monte_carlo_aligned):
             if self.monte_carlo_failed:
                 return
@@ -478,7 +525,7 @@ class FusionAdapter(Node):
                 return
             self.request_monte_carlo_alignment()
             return
-        if (self.live_mode and self.monte_carlo_aligned
+        if (self.live_mode and (self.monte_carlo_aligned or self.direct_initialization)
                 and self.pending_initial is not None
                 and not self.initial_sent
                 and self.initial_pub.get_subscription_count() > 0):
@@ -489,11 +536,14 @@ class FusionAdapter(Node):
             self.initial_pub.publish(initial)
             self.initial_sent = True
             self.initial_publications += 1
+            self.pending.clear()
             self.pending_initial = None
             # Autoware publishes the aligned reset while EKF/NDT are stopped,
             # then re-enables both native nodes.  EKF keeps the reset received
             # while inactive and its trigger only clears queued measurements.
-            self.initialization_steps = deque((('ndt', True), ('ekf', True)))
+            # Match pose_initializer's change_node_trigger(true): restore EKF
+            # first, then NDT after the aligned reset has been accepted.
+            self.initialization_steps = deque((('ekf', True), ('ndt', True)))
             self.get_logger().info('Published map->rear-center initial pose; waiting for EKF acknowledgement and fresh NDT.')
             return
         if (self.pending_initial is not None and all(self.activation.values())
@@ -655,6 +705,8 @@ class FusionAdapter(Node):
                 'attempts': self.monte_carlo_attempts,
                 'source_cloud_sent': self.monte_carlo_cloud_sent,
                 'service_pending': self.monte_carlo_future is not None,
+                'reliable': self.monte_carlo_reliable,
+                'direct': self.direct_initialization,
             },
             'map_frame': self.p['map_frame'], 'output_reference': 'rear_wheel_center',
             'odometry_child_frame': self.p['base_frame'], 'public_tf_child_frame': self.p['rear_frame'],

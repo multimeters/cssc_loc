@@ -159,7 +159,7 @@ class LiveSensorTests(unittest.TestCase):
                 node.tick()
             self.assertEqual(
                 calls,
-                [('ndt', False), ('ekf', False), ('ndt_align', 'map'), ('ndt', True), ('ekf', True)])
+                [('ekf', False), ('ndt', False), ('ndt_align', 'map'), ('ekf', True), ('ndt', True)])
             self.assertEqual(node.initial_publications, 1)
             self.assertAlmostEqual(node.initial_pub.messages[0].pose.pose.position.x, pose.pose.pose.position.x + .4)
             self.assertEqual(list(node.initial_pub.messages[0].pose.covariance), old_cov)
