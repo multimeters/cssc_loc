@@ -243,7 +243,7 @@ class FusionAdapter(Node):
         ns = stamp_ns(msg.header.stamp)
         if self.live_mode:
             if (not self.initial_sent or self.initial_epoch_ns is None or ns < self.initial_epoch_ns
-                    or not self.activation['ndt'] or ns < (self.ndt_epoch_ns or 0) or self.clock_error):
+                    or not self.activation['ndt'] or self.clock_error):
                 return
             age = (self.now_ns() - ns) * 1e-9
             if not -self.p['live_future_tolerance_s'] <= age <= self.p['max_sensor_age_s']:
@@ -260,6 +260,8 @@ class FusionAdapter(Node):
                         or not math.isfinite(dot) or dot < math.cos(self.p['initial_pose_ack_angle_rad']/2)):
                     return
                 self.initial_acknowledged = True
+            elif ns < (self.ndt_epoch_ns or 0):
+                return
         if self.ekf_last_ns is not None and ns <= self.ekf_last_ns:
             return
         if self.ekf_first_ns is None:
