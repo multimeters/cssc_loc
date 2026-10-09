@@ -14,6 +14,7 @@ import rclpy
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
 from geometry_msgs.msg import PoseWithCovarianceStamped, TransformStamped, TwistWithCovarianceStamped
 from nav_msgs.msg import Odometry
+from autoware_internal_localization_msgs.srv import PoseWithCovarianceStamped as NdtAlign
 from rclpy.clock import Clock, ClockType
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
@@ -71,6 +72,16 @@ class FusionAdapter(Node):
         self.initial_acknowledged = False
         self.initial_target = None
         self.post_initial_ndt = False
+        # Live initialization follows Autoware's pose-initializer order:
+        # obtain a fresh cloud, run NDT Monte Carlo alignment, then seed EKF
+        # with the reliable aligned pose.  The generation guards late replies
+        # from an alignment request superseded by a newer RViz pose.
+        self.monte_carlo_future = None
+        self.monte_carlo_generation = 0
+        self.monte_carlo_cloud_sent = False
+        self.monte_carlo_aligned = False
+        self.monte_carlo_failed = False
+        self.monte_carlo_attempts = 0
         self.ndt_epoch_ns = None
         self.ndt_active_since_monotonic = None
         self.ndt_last_result_monotonic = None
@@ -111,6 +122,7 @@ class FusionAdapter(Node):
             'ekf': self.create_client(SetBool, self.service_names['ekf_activation']),
             'ndt': self.create_client(SetBool, self.service_names['ndt_activation']),
         }
+        self.ndt_align_client = self.create_client(NdtAlign, self.service_names['ndt_align'])
         self.tf_pub = TransformBroadcaster(self) if self.p['publish_tf'] else None
         self.wall_clock = Clock(clock_type=ClockType.STEADY_TIME)
         self.create_timer(self.p['tick_period'], self.tick, clock=self.wall_clock)
@@ -252,10 +264,15 @@ class FusionAdapter(Node):
         if msg.header.frame_id != self.p['cloud_frame'] or not self.observe('cloud', msg.header.stamp):
             self.counts['cloud_dropped'] += 1
             return
-        if self.live_mode and (not self.initial_sent or self.initial_epoch_ns is None
-                               or stamp_ns(msg.header.stamp) < self.initial_epoch_ns):
-            self.counts['cloud_dropped'] += 1
-            return
+        if self.live_mode and not self.initial_sent:
+            # Before EKF is seeded, retain only the first phase's source cloud
+            # for Autoware NDT Monte Carlo initialization.  Once that source
+            # has been sent (or alignment has failed), do not accumulate scans
+            # while the service is doing its potentially long search.
+            if (self.pending_initial is None or self.monte_carlo_aligned
+                    or self.monte_carlo_failed or self.monte_carlo_cloud_sent):
+                self.counts['cloud_dropped'] += 1
+                return
         try:
             cloud = filter_cloud(msg, self.p['voxel_size'])
         except (ValueError, TypeError, BufferError) as error:
@@ -294,7 +311,13 @@ class FusionAdapter(Node):
             self.reject('invalid_initial_pose_frame_pose_or_covariance')
             return
         self.pending_initial = copy.deepcopy(msg)
+        self.monte_carlo_generation += 1
+        self.monte_carlo_future = None
+        self.monte_carlo_cloud_sent = False
+        self.monte_carlo_aligned = False
+        self.monte_carlo_failed = False
         self.initialization_restart = True
+        self.initialization_steps.clear()
         self.initial_sent = False
         self.initial_epoch_ns = None
         self.initial_acknowledged = False
@@ -305,6 +328,84 @@ class FusionAdapter(Node):
         for name in ('gyro', 'ndt'):
             self.latest.pop(name, None)
             self.last_input_ns.pop(name, None)
+
+    def forward_monte_carlo_source_cloud(self):
+        """Give native NDT one fresh cloud before calling ndt_align_srv.
+
+        The native sensor callback stores its input source before checking its
+        activation state.  This is the same ordering used by Autoware's pose
+        initializer: both NDT and EKF remain stopped while the source cloud is
+        captured, then the align service is called on the stopped NDT node.
+        Wait one executor tick before issuing the service request so the DDS
+        delivery can complete.
+        """
+        if (not self.live_mode or self.monte_carlo_cloud_sent
+                or not self.pending):
+            return False
+        cloud, _ = self.pending.pop()
+        self.pending.clear()
+        self.cloud_pub.publish(cloud)
+        self.counts['cloud_forwarded'] += 1
+        self.monte_carlo_cloud_sent = True
+        return True
+
+    def request_monte_carlo_alignment(self):
+        """Start Autoware NDT's Monte Carlo initial-pose service once."""
+        if (not self.live_mode or self.pending_initial is None
+                or self.monte_carlo_aligned or self.monte_carlo_failed
+                or not self.monte_carlo_cloud_sent or self.monte_carlo_future is not None
+                or not self.ndt_align_client.service_is_ready()):
+            return False
+        request = NdtAlign.Request()
+        request.pose_with_covariance = copy.deepcopy(self.pending_initial)
+        request.pose_with_covariance.header.stamp = self.get_clock().now().to_msg()
+        self.monte_carlo_future = (
+            self.monte_carlo_generation,
+            self.ndt_align_client.call_async(request),
+        )
+        self.monte_carlo_attempts += 1
+        return True
+
+    def poll_monte_carlo_alignment(self):
+        """Consume the NDT result and promote only a reliable alignment."""
+        if self.monte_carlo_future is None:
+            return False
+        generation, future = self.monte_carlo_future
+        if not future.done():
+            return False
+        self.monte_carlo_future = None
+        if generation != self.monte_carlo_generation:
+            return False
+        try:
+            response = future.result()
+            success = bool(response.success)
+            reliable = bool(response.reliable)
+        except Exception as error:
+            self.monte_carlo_failed = True
+            self.last_rejection = 'ndt_align_service_error:' + str(error)
+            self.reject(self.last_rejection)
+            return False
+        if not success:
+            self.monte_carlo_failed = True
+            self.last_rejection = 'ndt_align_failed'
+            self.reject(self.last_rejection)
+            return False
+        if not reliable:
+            self.monte_carlo_failed = True
+            self.last_rejection = 'ndt_align_unreliable'
+            self.reject(self.last_rejection)
+            return False
+        aligned = copy.deepcopy(response.pose_with_covariance)
+        if aligned.header.frame_id != self.p['map_frame']:
+            self.monte_carlo_failed = True
+            self.last_rejection = 'ndt_align_wrong_result_frame'
+            self.reject(self.last_rejection)
+            return False
+        aligned.header.stamp = self.get_clock().now().to_msg()
+        self.pending_initial = aligned
+        self.monte_carlo_aligned = True
+        self.pending.clear()
+        return True
 
     def poll_native_transition(self, now_ns):
         """One service request at a time for initialization, idle recovery and clock faults."""
@@ -354,17 +455,46 @@ class FusionAdapter(Node):
     def live_initialization_tick(self):
         if self.pending_initial is None and not self.initial_sent and self.p['initialization'] == 'config':
             self.on_initial_pose(self.configured_initial_pose())
+        self.poll_monte_carlo_alignment()
         if self.initialization_restart:
             # NDT deactivation acknowledgement waits for its in-flight scan
-            # callback. EKF true clears measurement queues; NDT true clears its
-            # prior buffer. Keep public output paused through this sequence.
-            self.initialization_steps = deque((('ndt', False), ('ekf', False),
-                                               ('ndt', True), ('ekf', True)))
+            # callback. Keep EKF inactive until NDT has returned a reliable
+            # Monte Carlo alignment, then seed EKF with that refined pose.
+            self.initialization_steps = deque((('ndt', False), ('ekf', False)))
             self.initialization_restart = False
         if self.initialization_steps:
             name, desired = self.initialization_steps[0]
             if self.request_native_transition(name, desired, 'initialization'):
                 self.initialization_steps.popleft()
+            return
+        if (self.live_mode and self.pending_initial is not None
+                and not self.monte_carlo_aligned):
+            if self.monte_carlo_failed:
+                return
+            # NDT stores its source cloud even while stopped. The following
+            # tick starts the service only after the cloud has been delivered
+            # to the native NDT callback group.
+            if self.forward_monte_carlo_source_cloud():
+                return
+            self.request_monte_carlo_alignment()
+            return
+        if (self.live_mode and self.monte_carlo_aligned
+                and self.pending_initial is not None
+                and not self.initial_sent
+                and self.initial_pub.get_subscription_count() > 0):
+            initial = self.pending_initial
+            initial.header.stamp = self.get_clock().now().to_msg()
+            self.initial_epoch_ns = stamp_ns(initial.header.stamp)
+            self.initial_target = copy.deepcopy(initial)
+            self.initial_pub.publish(initial)
+            self.initial_sent = True
+            self.initial_publications += 1
+            self.pending_initial = None
+            # Autoware publishes the aligned reset while EKF/NDT are stopped,
+            # then re-enables both native nodes.  EKF keeps the reset received
+            # while inactive and its trigger only clears queued measurements.
+            self.initialization_steps = deque((('ndt', True), ('ekf', True)))
+            self.get_logger().info('Published map->rear-center initial pose; waiting for EKF acknowledgement and fresh NDT.')
             return
         if (self.pending_initial is not None and all(self.activation.values())
                 and self.initial_pub.get_subscription_count() > 0):
@@ -519,6 +649,13 @@ class FusionAdapter(Node):
             'runtime_mode': self.p['runtime_mode'], 'initialization_source': self.p['initialization'],
             'initial_pose_acknowledged': self.initial_acknowledged,
             'imu_acceleration_used': False, 'initial_pose_publications': self.initial_publications,
+            'monte_carlo': {
+                'aligned': self.monte_carlo_aligned,
+                'failed': self.monte_carlo_failed,
+                'attempts': self.monte_carlo_attempts,
+                'source_cloud_sent': self.monte_carlo_cloud_sent,
+                'service_pending': self.monte_carlo_future is not None,
+            },
             'map_frame': self.p['map_frame'], 'output_reference': 'rear_wheel_center',
             'odometry_child_frame': self.p['base_frame'], 'public_tf_child_frame': self.p['rear_frame'],
             'mount_xyz': self.p['mount_xyz'], 'mount_rpy': self.p['mount_rpy'],

@@ -68,6 +68,18 @@ Visualization Manager:
         Value: /localization/pointcloud/deskewed
       Use Fixed Frame: true
       Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: NDT Monte Carlo Initial Pose
+      Namespaces:
+        {}
+      Topic:
+        Depth: 10
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /localization/pose_estimator/monte_carlo_initial_pose_marker
+      Value: true
     - Class: rviz_default_plugins/PoseWithCovariance
       Enabled: true
       Name: EKF Pose

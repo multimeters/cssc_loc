@@ -12,6 +12,7 @@
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>std_srvs</exec_depend>
+  <exec_depend>autoware_internal_localization_msgs</exec_depend>
   <exec_depend>diagnostic_msgs</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
   <exec_depend>launch</exec_depend>

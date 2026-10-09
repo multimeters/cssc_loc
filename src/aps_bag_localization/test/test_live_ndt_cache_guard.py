@@ -20,14 +20,15 @@ MASTER = Path(__file__).resolve().parents[3] / 'config' / 'localization.yaml'
 
 
 class Future:
-    def __init__(self, ready=True):
+    def __init__(self, ready=True, result=None):
         self.ready = ready
+        self._result = result
 
     def done(self):
         return self.ready
 
     def result(self):
-        return SimpleNamespace(success=True)
+        return self._result or SimpleNamespace(success=True)
 
 
 class Client:
@@ -73,6 +74,18 @@ class LiveNdtCacheGuardTests(unittest.TestCase):
         node = FusionAdapter(str(self.config_path))
         calls = []
         node.activation_clients = {name: Client(name, calls) for name in ('ndt', 'ekf')}
+        class AlignClient:
+            def service_is_ready(self):
+                return True
+
+            def call_async(self, request):
+                aligned = copy.deepcopy(request.pose_with_covariance)
+                aligned.pose.pose.position.x += .1
+                calls.append(('ndt_align', request.pose_with_covariance.header.frame_id))
+                return Future(result=SimpleNamespace(
+                    success=True, reliable=True, pose_with_covariance=aligned))
+
+        node.ndt_align_client = AlignClient()
         node.activation = {'ndt': True, 'ekf': True}
         node.initial_sent = node.initial_acknowledged = node.post_initial_ndt = True
         node.initial_epoch_ns = node.now_ns()-10**9
@@ -150,10 +163,12 @@ class LiveNdtCacheGuardTests(unittest.TestCase):
             self.assertFalse(node.initial_sent)
             pending.ready = True
             node.activation_clients['ndt'].ready = True
-            for _ in range(5):
+            node.cloud_pub = Publisher()
+            node.pending.append(('fresh_alignment_cloud', None))
+            for _ in range(8):
                 node.tick()
             self.assertEqual(calls, [('ndt', False), ('ndt', False), ('ekf', False),
-                                      ('ndt', True), ('ekf', True)])
+                                     ('ndt_align', 'map'), ('ndt', True), ('ekf', True)])
             self.assertTrue(node.initial_sent)
             self.assertEqual(node.initial_publications, 1)
         finally:

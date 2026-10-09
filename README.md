@@ -42,7 +42,7 @@ Windows 对应 `.\start.cmd --mode replay`。此模式自动生成 `use_sim_time
 1. 修改 `paths.map` 指向 PCD 地图，核查 YAML 中的外参、话题和 frame。实时模式允许 `paths.bag: null`，不会访问录包。
 2. 启动 MID-360 和底盘驱动，确保下表的三个输入持续发布；本包不负责启动硬件驱动。
 3. 运行 `bash start.sh --mode live` 或双击 `start.cmd`。
-4. RViz 的 Fixed Frame 设置为 `map`，用 **2D Pose Estimate** 在地图上给出车辆**后轮中心**位置和朝向，发布到 `/initialpose`。接收到有效初值并完成新一轮 NDT 匹配后，程序才公开定位结果。
+4. RViz 的 Fixed Frame 设置为 `map`，用 **2D Pose Estimate** 在地图上给出车辆**后轮中心**位置和朝向，发布到 `/initialpose`。程序会停用 NDT/EKF，调用 Autoware NDT 的 Monte Carlo 初始搜索，再把可靠的对齐结果交给 EKF，最后重新激活 NDT/EKF；确认并完成新一轮 NDT 匹配后才公开定位结果。候选箭头显示在 `/localization/pose_estimator/monte_carlo_initial_pose_marker`。
 
 在 RViz 添加 **PointCloud2**，话题选择 `/map/output/debug/downsampled_pointcloud_map`，Durability 设为 **Transient Local**、Reliability 设为 **Reliable**，即可看到用于选取初值的地图。显示地图只发布一次并保留供后加入的订阅者读取；`config/native/map_loader.yaml` 中的 `leaf_size` 只控制这个显示副本，不改变 NDT 地图。此原生显示模块固定使用 `map` frame；若自定义 `frames.map`，需关闭该显示副本并另行提供正确 frame 的可视化地图。
 
@@ -53,7 +53,7 @@ Windows 对应 `.\start.cmd --mode replay`。此模式自动生成 `use_sim_time
 | `/hunter_odom` | `nav_msgs/msg/Odometry` | 仅 `twist.twist.linear.x`，`child_frame_id: hunter_base_link` |
 | `/initialpose` | `geometry_msgs/msg/PoseWithCovarianceStamped` | 初始/重新定位请求，`header.frame_id: map`，pose 表示后轮中心 |
 
-实时默认 `live.initialization: topic`，不会自动套用录包的旧起点。再次发布 `/initialpose` 可重新初始化，期间暂停公开位姿并清除旧扫描，等待新定位建立。若起点固定且已核实，可改为 `live.initialization: config`，启动时使用 `initial_pose` 中的 **map → 雷达** 初值；两种初值的参考点不同，不能直接混填。
+实时默认 `live.initialization: topic`，不会自动套用录包的旧起点。再次发布 `/initialpose` 可重新初始化，期间暂停公开位姿并清除旧扫描，等待 Monte Carlo 对齐、新 EKF 初值确认和后续 NDT 观测。若起点固定且已核实，可改为 `live.initialization: config`，启动时使用 `initial_pose` 中的 **map → 雷达** 初值；两种初值的参考点不同，不能直接混填。
 
 `live.domain_id` 默认 `0`，`live.localhost_only` 默认 `false`。雷达驱动、底盘、RViz 与定位进程应使用相同的 `ROS_DOMAIN_ID`；不同 Domain 无法互相发现，参见 [ROS 2 官方说明](https://github.com/ros2/ros2_documentation/blob/humble/source/Concepts/Intermediate/About-Domain-ID.rst)。跨机时还需确保 DDS 网络可达；Windows/WSL 启动器不会自动配置网络、防火墙或传感器。
 

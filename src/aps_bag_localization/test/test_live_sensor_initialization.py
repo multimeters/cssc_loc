@@ -129,7 +129,22 @@ class LiveSensorTests(unittest.TestCase):
                     return SimpleNamespace(done=lambda: True, result=lambda: SimpleNamespace(success=True))
 
             node.activation_clients = {name: Client(name) for name in ('ndt', 'ekf')}
+            class AlignClient:
+                def service_is_ready(self):
+                    return True
+
+                def call_async(self, request):
+                    aligned = copy.deepcopy(request.pose_with_covariance)
+                    aligned.pose.pose.position.x += .4
+                    calls.append(('ndt_align', request.pose_with_covariance.header.frame_id))
+                    return SimpleNamespace(
+                        done=lambda: True,
+                        result=lambda: SimpleNamespace(
+                            success=True, reliable=True, pose_with_covariance=aligned))
+
+            node.ndt_align_client = AlignClient()
             node.initial_pub, node.output_pub, node.public_pose_pub = Publisher(), Publisher(), Publisher()
+            node.cloud_pub = Publisher()
             node.tf_pub = None
             node.tick()
             self.assertEqual(calls, [])
@@ -137,11 +152,14 @@ class LiveSensorTests(unittest.TestCase):
             pose.header.stamp.sec = 1  # RViz input is deliberately restamped only at dispatch.
             old_cov = list(pose.pose.covariance)
             node.on_initial_pose(pose)
-            for _ in range(5):
+            node.pending.append(('fresh_alignment_cloud', None))
+            for _ in range(10):
                 node.tick()
-            self.assertEqual(calls, [('ndt', False), ('ekf', False), ('ndt', True), ('ekf', True)])
+            self.assertEqual(
+                calls,
+                [('ndt', False), ('ekf', False), ('ndt_align', 'map'), ('ndt', True), ('ekf', True)])
             self.assertEqual(node.initial_publications, 1)
-            self.assertEqual(node.initial_pub.messages[0].pose, pose.pose)
+            self.assertAlmostEqual(node.initial_pub.messages[0].pose.pose.position.x, pose.pose.pose.position.x + .4)
             self.assertEqual(list(node.initial_pub.messages[0].pose.covariance), old_cov)
             self.assertGreater(stamp_ns(node.initial_pub.messages[0].header.stamp), 10**9)
             self.assertEqual(node.current_mode(), ('WAITING_SENSORS', False))
