@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import rclpy
 import yaml
+from sensor_msgs.msg import PointCloud2
 
 from aps_bag_localization.configuration import load_config
 from aps_bag_localization.fusion_adapter import FusionAdapter
@@ -164,7 +165,9 @@ class LiveNdtCacheGuardTests(unittest.TestCase):
             pending.ready = True
             node.activation_clients['ndt'].ready = True
             node.cloud_pub = Publisher()
-            node.pending.append(('fresh_alignment_cloud', None))
+            alignment_cloud = PointCloud2()
+            alignment_cloud.header.stamp.sec, alignment_cloud.header.stamp.nanosec = divmod(node.now_ns(), 10**9)
+            node.pending.append((alignment_cloud, None))
             for _ in range(8):
                 node.tick()
             self.assertEqual(calls, [('ndt', False), ('ndt', False), ('ekf', False),

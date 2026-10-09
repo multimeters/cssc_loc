@@ -152,7 +152,9 @@ class LiveSensorTests(unittest.TestCase):
             pose.header.stamp.sec = 1  # RViz input is deliberately restamped only at dispatch.
             old_cov = list(pose.pose.covariance)
             node.on_initial_pose(pose)
-            node.pending.append(('fresh_alignment_cloud', None))
+            alignment_cloud = PointCloud2()
+            stamp(alignment_cloud, node.now_ns())
+            node.pending.append((alignment_cloud, None))
             for _ in range(10):
                 node.tick()
             self.assertEqual(
